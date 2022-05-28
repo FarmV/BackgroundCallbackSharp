@@ -3,13 +3,13 @@
 using Linearstar.Windows.RawInput;
 
 using System;
+using System.Security.Policy;
 using System.Windows;
 using System.Windows.Interop;
 using System.Windows.Threading;
 
-namespace FVH.BackgroundInput
+namespace FVH.Background.InputHandler
 {
-
     public class Input : IDisposable
     {
         private volatile HwndSource? ProxyInputHandlerWindow;
@@ -92,13 +92,15 @@ namespace FVH.BackgroundInput
         //public void Dispose()
         //{
         //    if (isDispose is true) return;
-     
+
         //    isDispose = true;
         //    GC.SuppressFinalize(this);
         //}
         //~ExtensionInput() => Dispose();
-        public Task<HwndSource> GetProxyWindow()
+        private bool isItialized = false;
+        public Task<HwndSource> GetOneInstanceProxyWindow()
         {
+            if (isItialized is true) throw new InvalidOperationException("You cannot reinitialize the same class instance");
             EventWaitHandle WaitHandleStartWindow = new EventWaitHandle(false, EventResetMode.ManualReset);
 
             HwndSource? ProxyInputHandlerWindow = null;
@@ -118,6 +120,7 @@ namespace FVH.BackgroundInput
 
             WaitHandleStartWindow.WaitOne();
             WaitHandleStartWindow.Dispose();
+            isItialized = true;
             return Task.FromResult(ProxyInputHandlerWindow is not null ? ProxyInputHandlerWindow : throw new NullReferenceException());
         }
 
