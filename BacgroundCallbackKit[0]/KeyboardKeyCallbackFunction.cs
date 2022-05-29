@@ -1,82 +1,35 @@
 ﻿using System.Diagnostics.CodeAnalysis;
 
-using FVH.BackgroundInput;
+using static FVH.BackgroundInput.BaseKeybordInput;
 
-namespace SSHF.Infrastructure.Algorithms.Base
+namespace FVH.BackgroundInput
 {
     internal class VKeysEqualityComparer : IEqualityComparer<VKeys[]>
     {
+        public bool Equals(VKeys[]? x, VKeys[]? y) => x is not null && y is not null && x.Length is not 0 && y.Length is not 0 && x.SequenceEqual(y);
+        public int GetHashCode([DisallowNull] VKeys[] obj) => 0;
 
-
-        public bool Equals(VKeys[]? x, VKeys[]? y)
-        {
-            if (x is null || y is null) return false;
-
-            if (x.Length is 0 || y.Length is 0) return false;
-
-            return x.SequenceEqual(y);
-
-        }
-
-        public int GetHashCode([DisallowNull] VKeys[] obj)
-        {
-            return 0;
-        }
     }
     internal class KeyboardKeyCallbackFunction : IAsyncDisposable
     {
         public async ValueTask DisposeAsync() => await Task.Run(async () =>
         {
-            if (Lowlevlhook is not null) await Lowlevlhook.DisposeAsync();
+            if (_lowlevlhook is not null) await _lowlevlhook.DisposeAsync();
 
             GC.SuppressFinalize(this);
         });
 
-        private readonly static KeyboardKeyCallbackFunction Instance = new KeyboardKeyCallbackFunction();
-
-
-        internal static MyLowlevlhook? Lowlevlhook;
-     
-        private async static Task<VKeys?> PreKeys(List<VKeys> keys)//
+        public KeyboardKeyCallbackFunction(BaseKeybordInput.KeyboardHandler keyboardHandler, LowLevlHook lowLevlHook)
         {
-            if (Lowlevlhook is null) throw new NullReferenceException(nameof(MyLowlevlhook));
-            VKeys? res = null;
+            _keyboardHandler = keyboardHandler;
+            _lowlevlhook = lowLevlHook;
+            _keyboardHandler.KeyPressEvent += _keyboardHandler_KeyPressEvent;
+        }
 
-            bool ret = default;
-            Lowlevlhook.KeyDown += CheckKey;
-            void CheckKey(VKeys key, SettingHook setting)
-            {
-                if (Lowlevlhook is null) throw new NullReferenceException(nameof(MyLowlevlhook));
-                if (keys.Contains(key))
-                {
-                    res = key;
-                    setting.Break = true;
-                    Lowlevlhook.KeyDown -= CheckKey;
-                    ret = true;
-                }
-                else
-                {
-                    Lowlevlhook.KeyDown -= CheckKey;
-                    ret = true;
-                }
-            }
-
-            for (int i = 0; i < 20; i++)
-            {
-                if (ret is true) break;
-                await Task.Delay(1);
-            }
-            return res;
-        }//
-
-
-
-        private static async void KeyBordBaseRawInput_ChangeTheKeyPressure(object? sender, DataKeysNotificator e)//AAAAAAAA
+        private async void _keyboardHandler_KeyPressEvent(object? sender, DataKeysNotificator e)
         {
-
             VKeys[] pressedKeys = e.Keys;
             if (pressedKeys.Length is 0) return;
-
 
             List<VKeys> listPreKeys = new List<VKeys>();
 
@@ -94,18 +47,17 @@ namespace SSHF.Infrastructure.Algorithms.Base
                         {
                             if (keyPre.Length is 0)
                             {
-                            //  fullV.Add(itemKeyArray); // Вообще надо бы сделать более эфективную с логической точки срения обработку.
+                                //  fullV.Add(itemKeyArray); // Вообще надо бы сделать более эфективную с логической точки срения обработку.
                                 return false;
                             };
                             listPreKeys.Add(keyPre[0]);
                         }
-
                     }
                 }
                 return true;
             }).Where(x => x.Length == pressedKeys.Length).ToList();
 
-            if(fullV.Count is 1 & listPreKeys.Count is 0)
+            if (fullV.Count is 1 & listPreKeys.Count is 0)
             {
                 keys.Clear();
                 keys.Add(fullV.ToArray()[0]);
@@ -131,7 +83,7 @@ namespace SSHF.Infrastructure.Algorithms.Base
                     }).Where(x => x.Length == pressedKeys.Length + 1).ToList();
                 }
             }
-            
+
             if (keys.Count is 0) return;
             if (keys.Count > 1) throw new InvalidOperationException();
             _ = Task.Run(() =>
@@ -151,52 +103,61 @@ namespace SSHF.Infrastructure.Algorithms.Base
             }).ConfigureAwait(false);
 
         }
-        private static bool _instal = default;
-        internal static KeyboardKeyCallbackFunction GetInstance()
+
+        private LowLevlHook _lowlevlhook;
+        private BaseKeybordInput.KeyboardHandler _keyboardHandler;
+        private async Task<VKeys?> PreKeys(List<VKeys> keys)
         {
-            if (_instal is false)
+            if (_lowlevlhook is null) throw new NullReferenceException(nameof(LowLevlHook));
+            VKeys? res = null;
+
+            bool ret = default;
+            _lowlevlhook.KeyDown += CheckKey;
+
+            void CheckKey(VKeys key, LowLevlHook.SettingHook setting)
             {
-
-                App.WindowsIsOpen[App.GetMyMainWindow].Value.Invoke(() =>
+                if (_lowlevlhook is null) throw new NullReferenceException(nameof(LowLevlHook));
+                if (keys.Contains(key))
                 {
-                    Lowlevlhook = new MyLowlevlhook();
-                    Lowlevlhook.InstallHook();
-
-                });
-                _instal = true;
+                    res = key;
+                    setting.Break = true;
+                    _lowlevlhook.KeyDown -= CheckKey;
+                    ret = true;
+                }
+                else
+                {
+                    _lowlevlhook.KeyDown -= CheckKey;
+                    ret = true;
+                }
             }
-            return Instance;
+
+            for (int i = 0; i < 20; i++)
+            {
+                if (ret is true) break;
+                await Task.Delay(1);
+            }
+            return res;           
         }
 
-        private static class Tasks
+        private class Tasks
         {
             internal static Dictionary<VKeys[], Func<Task>> FunctionsCallback = new Dictionary<VKeys[], Func<Task>>(new VKeysEqualityComparer());
         }
 
-        enum AddCallBackTaskFail
-        {
-            None,
-            KeysAreAlreadyRegistered,
-            IsOneKey,
-            KeyCombinationEmpty
-        }
-        private static object _lockMedthod = new object();
+
+        private object _lockMedthod = new object();
+
+
         internal Task AddCallBackTask(VKeys[] keyCombo, Func<Task> callbackTask, bool isOneKey = default)
         {
             lock (_lockMedthod)
             {
-                var AddCallBackTaskFails = ExHelp.GetLazzyDictionaryFails
-                    (
-                     new KeyValuePair<AddCallBackTaskFail, string>(AddCallBackTaskFail.KeysAreAlreadyRegistered, "Комибинация клавиш(клавиши) уже зарегистрированна"), //0
-                     new KeyValuePair<AddCallBackTaskFail, string>(AddCallBackTaskFail.IsOneKey, $"Была передана одна клавиша для регистрации с ключем {nameof(isOneKey)} false"), //1
-                     new KeyValuePair<AddCallBackTaskFail, string>(AddCallBackTaskFail.KeyCombinationEmpty, $"Невозможно зарегистрировать пустую комбинацию клавиш") //2
-                    );
+              
+                if (keyCombo.Length is 0) throw new InvalidOperationException($"One key to register with the key was transferred {nameof(isOneKey)} false");
 
-                if (keyCombo.Length is 0) throw new InvalidOperationException().Report(AddCallBackTaskFails.Value[2]);
+                if (Tasks.FunctionsCallback.ContainsKey(keyCombo) is true) throw new InvalidOperationException("The key combination(s) is already registered");
 
-                if (Tasks.FunctionsCallback.ContainsKey(keyCombo) is true) throw new InvalidOperationException().Report(AddCallBackTaskFails.Value[0]);
-
-                if (keyCombo.Length is 1 & isOneKey is false) throw new InvalidOperationException().Report(AddCallBackTaskFails.Value[1]);
+                if (keyCombo.Length is 1 & isOneKey is false) throw new InvalidOperationException("Unable to register an empty key combination");
 
                 Tasks.FunctionsCallback.Add(keyCombo, callbackTask);
 
@@ -204,7 +165,7 @@ namespace SSHF.Infrastructure.Algorithms.Base
             }
         }
 
-        internal static Task<IEnumerable<KeyValuePair<VKeys[], Func<Task>>>> ReturnCollectionRegistrationFunction() => new Task<IEnumerable<KeyValuePair<VKeys[], Func<Task>>>>(() =>
+        internal Task<IEnumerable<KeyValuePair<VKeys[], Func<Task>>>> ReturnCollectionRegistrationFunction() => new Task<IEnumerable<KeyValuePair<VKeys[], Func<Task>>>>(() =>
         {
             static IEnumerable<KeyValuePair<VKeys[], Func<Task>>> GetFunction()
             {
@@ -216,9 +177,9 @@ namespace SSHF.Infrastructure.Algorithms.Base
             return GetFunction();
         });
 
-        internal static Task<bool> ContainsKeyComibantion(VKeys[] keyCombo) => new Task<bool>(() =>
+        internal Task<bool> ContainsKeyComibantion(VKeys[] keyCombo) => new Task<bool>(() =>
         {
-            if (Tasks.FunctionsCallback.ContainsKey(keyCombo) is true) return true; else return false;
+            return Tasks.FunctionsCallback.ContainsKey(keyCombo) is true;
         });
 
 

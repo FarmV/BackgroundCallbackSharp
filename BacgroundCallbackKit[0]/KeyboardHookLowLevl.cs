@@ -1,13 +1,9 @@
-﻿using FVH.BackgroundInput;
-
-using System.Diagnostics;
+﻿using System.Diagnostics;
 using System.Runtime.InteropServices;
 
-namespace SSHF.Infrastructure.Algorithms.Input.Keybord.Base
+namespace FVH.BackgroundInput
 {
-
-
-    internal class MyLowlevlhook : IAsyncDisposable
+    internal class LowLevlHook : IAsyncDisposable
     {
 
         public async ValueTask DisposeAsync() => await Task.Run(() => { UninstallHook(); GC.SuppressFinalize(this); });
@@ -23,7 +19,7 @@ namespace SSHF.Infrastructure.Algorithms.Input.Keybord.Base
             hookID = SetHook(hookHandler);
         }
 
-        ~MyLowlevlhook() => UninstallHook();
+        ~LowLevlHook() => UninstallHook();
 
         public void UninstallHook() => UnhookWindowsHookEx(hookID);
 

@@ -1,6 +1,4 @@
-﻿
-
-using FVH.BackgroundInput;
+﻿using FVH.BackgroundInput;
 
 using Linearstar.Windows.RawInput;
 
