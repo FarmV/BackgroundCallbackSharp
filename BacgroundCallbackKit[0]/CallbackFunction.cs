@@ -13,8 +13,8 @@ namespace FVH.Background.Input
     internal class CallbackFunction : IAsyncDisposable, ICallBack
     {
         public async ValueTask DisposeAsync() => await Task.Run(async () =>
-        {
-            if (_lowlevlhook is not null) await _lowlevlhook.DisposeAsync();
+        { 
+           _lowlevlhook?.Dispose();
 
             GC.SuppressFinalize(this);
         });
