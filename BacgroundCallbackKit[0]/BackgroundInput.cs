@@ -23,11 +23,9 @@ namespace FVH.Background.InputHandler
         {
             if (isDispose is true) return;
             ProxyInputHandlerWindow?.Dispatcher?.InvokeShutdown();
-           // ProxyInputHandlerWindow?.Dispose();
-
+            _lowLevlHook?.Dispose();          
             isDispose = true;
             GC.SuppressFinalize(this);
-
         }
 
         ~Input() => Dispose();

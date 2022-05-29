@@ -3,10 +3,14 @@ using System.Runtime.InteropServices;
 
 namespace FVH.Background.Input
 {
-    public class LowLevlHook : IAsyncDisposable
+    public class LowLevlHook : IDisposable
     {
 
-        public async ValueTask DisposeAsync() => await Task.Run(() => { UninstallHook(); GC.SuppressFinalize(this); });
+        public void Dispose() 
+        { 
+          UninstallHook(); 
+          GC.SuppressFinalize(this);
+        } 
 
         private delegate IntPtr KeyboardHookHandler(int nCode, WMEvent wParam, TagKBDLLHOOKSTRUCT lParam);
         private KeyboardHookHandler? hookHandler;
