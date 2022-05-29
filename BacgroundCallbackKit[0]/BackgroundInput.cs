@@ -38,7 +38,10 @@ namespace FVH.Background.InputHandler
 
 
 
-        public async Task Subscribe() => await Subscribe();
+        public async Task Subscribe()
+        {
+            await Subscribe();
+        }
 
         public async Task Subscribe(Action<RawInputData> callback)
         {
@@ -136,9 +139,10 @@ namespace FVH.Background.InputHandler
     public interface IHandler
     {
         public List<VKeys> IsPressedKeys { get;}
-  
+      
         public event EventHandler<DataKeysNotificator>? KeyPressEvent;
-        internal void Handler(RawInputData data);
+
+        public void Handler(RawInputData data);
     }
 
 

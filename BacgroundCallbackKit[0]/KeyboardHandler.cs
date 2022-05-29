@@ -6,12 +6,11 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-
-
+using FVH.Background.InputHandler;
 
 namespace FVH.Background.Input
 {
-    public class DataKeysNotificator
+    public class DataKeysNotificator 
     {
         public DataKeysNotificator(VKeys[] keys)
         {
@@ -23,7 +22,7 @@ namespace FVH.Background.Input
             get;
         }
     }
-    internal class KeyboardHandler
+    internal class KeyboardHandler : IHandler
     {
         public List<VKeys> IsPressedKeys => _isPressedKeys.ToList();
 
@@ -33,7 +32,7 @@ namespace FVH.Background.Input
 
 
         private readonly object _lockObject = new object();
-        internal void Handler(RawInputData data, Action<DataKeysNotificator> action)
+        public void Handler(RawInputData data)
         {
             if (data is not RawInputKeyboardData keyboardData) return;
 

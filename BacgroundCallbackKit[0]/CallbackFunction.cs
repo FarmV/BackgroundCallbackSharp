@@ -1,4 +1,6 @@
-﻿using System.Diagnostics.CodeAnalysis;
+﻿using FVH.Background.InputHandler;
+
+using System.Diagnostics.CodeAnalysis;
 
 namespace FVH.Background.Input
 {
@@ -8,7 +10,7 @@ namespace FVH.Background.Input
         public int GetHashCode([DisallowNull] VKeys[] obj) => 0;
 
     }
-    internal class CallbackFunction : IAsyncDisposable
+    internal class CallbackFunction : IAsyncDisposable, ICallBack
     {
         public async ValueTask DisposeAsync() => await Task.Run(async () =>
         {
@@ -146,7 +148,7 @@ namespace FVH.Background.Input
         private object _lockMedthod = new object();
 
 
-        internal Task AddCallBackTask(VKeys[] keyCombo, Func<Task> callbackTask, bool isOneKey = default)
+        public Task AddCallBackTask(VKeys[] keyCombo, Func<Task> callbackTask, bool isOneKey = default)
         {
             lock (_lockMedthod)
             {
@@ -163,7 +165,7 @@ namespace FVH.Background.Input
             }
         }
 
-        internal Task<IEnumerable<KeyValuePair<VKeys[], Func<Task>>>> ReturnCollectionRegistrationFunction() => new Task<IEnumerable<KeyValuePair<VKeys[], Func<Task>>>>(() =>
+        public Task<IEnumerable<KeyValuePair<VKeys[], Func<Task>>>> ReturnCollectionRegistrationFunction() => new Task<IEnumerable<KeyValuePair<VKeys[], Func<Task>>>>(() =>
         {
             static IEnumerable<KeyValuePair<VKeys[], Func<Task>>> GetFunction()
             {
@@ -175,7 +177,7 @@ namespace FVH.Background.Input
             return GetFunction();
         });
 
-        internal Task<bool> ContainsKeyComibantion(VKeys[] keyCombo) => new Task<bool>(() =>
+        public Task<bool> ContainsKeyComibantion(VKeys[] keyCombo) => new Task<bool>(() =>
         {
             return Tasks.FunctionsCallback.ContainsKey(keyCombo) is true;
         });
