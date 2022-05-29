@@ -11,30 +11,30 @@ using System.Threading.Tasks;
 
 namespace FVH.BackgroundInput
 {
-    internal class BaseKeybordInput
+    public class BaseKeybordInput
     {
-        internal class DataKeysNotificator
+        public class DataKeysNotificator
         {
-            internal DataKeysNotificator(VKeys[] keys)
+            public DataKeysNotificator(VKeys[] keys)
             {
                 Keys = keys;
             }
 
-            internal VKeys[] Keys
+            public VKeys[] Keys
             {
                 get;
             }
         }
         internal class KeyboardHandler
         {
-            internal static List<VKeys> IsPressedKeys => _isPressedKeys.ToList();
+            public List<VKeys> IsPressedKeys => _isPressedKeys.ToList();
 
-            internal static event EventHandler<DataKeysNotificator>? KeyPressEvent;
+            public event EventHandler<DataKeysNotificator>? KeyPressEvent;
 
-            private static readonly List<VKeys> _isPressedKeys = new List<VKeys>();
+            private readonly List<VKeys> _isPressedKeys = new List<VKeys>();
 
      
-            private static readonly object _lockObject = new object();
+            private readonly object _lockObject = new object();
             internal void Handler(RawInputData data, Action<DataKeysNotificator> action)
             {
                 if (data is not RawInputKeyboardData keyboardData) return;

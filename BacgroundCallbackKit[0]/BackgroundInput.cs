@@ -5,10 +5,13 @@ using FVH.BackgroundInput;
 using Linearstar.Windows.RawInput;
 
 using System;
+using System.IO;
 using System.Security.Policy;
 using System.Windows;
 using System.Windows.Interop;
 using System.Windows.Threading;
+
+using static FVH.BackgroundInput.BaseKeybordInput;
 
 namespace FVH.Background.InputHandler
 {
@@ -47,7 +50,7 @@ namespace FVH.Background.InputHandler
 
             Thread winThread = new Thread(() =>
             {
-                HwndSourceParameters configInitWindow = new HwndSourceParameters("InputHandler", 0, 0)
+                HwndSourceParameters configInitWindow = new HwndSourceParameters($"InputHandler-{Path.GetRandomFileName}", 0, 0)
                 {
                     WindowStyle = 0x800000
                 };
@@ -106,8 +109,8 @@ namespace FVH.Background.InputHandler
             HwndSource? ProxyInputHandlerWindow = null;
             Thread winThread = new Thread(() =>
             {
-                Console.WriteLine("Окно создано...");
-                HwndSourceParameters configInitWindow = new HwndSourceParameters("InputHandlerExtension", 0, 0)
+               
+                HwndSourceParameters configInitWindow = new HwndSourceParameters($"InputHandlerExtension-{Path.GetRandomFileName}", 0, 0)
                 {
                     WindowStyle = 0x800000
                 };
@@ -126,13 +129,19 @@ namespace FVH.Background.InputHandler
 
     }
 
-    public interface IInputHandler
+    public interface ICallBack
     {
         public Task AddCallBackTask(VKeys[] keyCombo, Func<Task> callbackTask, bool isOneKey = false);
         public Task<bool> ContainsKeyComibantion(VKeys[] keyCombo);
         public Task<IEnumerable<KeyValuePair<VKeys[], Func<Task>>>> ReturnCollectionRegistrationFunction();
     }
-
+    public interface IHandler
+    {
+        public List<VKeys> IsPressedKeys { get;}
+  
+        public event EventHandler<DataKeysNotificator>? KeyPressEvent;
+        internal void Handler(RawInputData data);
+    }
 
 
 
