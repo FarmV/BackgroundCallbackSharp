@@ -62,8 +62,9 @@ namespace FVH.Background.Input
                 keys.Clear();
                 keys.Add(fullV.ToArray()[0]);
             }
-
-            if (listPreKeys.Count > 0)
+     
+            var listPreKeys2 = listPreKeys.Distinct().ToList();
+            if (listPreKeys2.Count > 0)
             {
                 VKeys? callhook = await PreKeys(listPreKeys);
                 if (callhook.HasValue is true)

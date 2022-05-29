@@ -23,7 +23,7 @@ namespace FVH.Background.InputHandler
         {
             if (isDispose is true) return;
             ProxyInputHandlerWindow?.Dispatcher?.InvokeShutdown();
-            ProxyInputHandlerWindow?.Dispose();
+           // ProxyInputHandlerWindow?.Dispose();
 
             isDispose = true;
             GC.SuppressFinalize(this);
@@ -35,16 +35,14 @@ namespace FVH.Background.InputHandler
 
         private bool isItialized = false;
         readonly Action<RawInputData> _callbackEvent;
-        readonly KeyboardHandler _keyboardHandler;
-        readonly LowLevlHook _lowLevlHook;
-        readonly CallbackFunction _callbackFunction;
+        KeyboardHandler _keyboardHandler;
+        LowLevlHook? _lowLevlHook;
+        CallbackFunction? _callbackFunction;
 
         public Input()
         {
             _keyboardHandler = new KeyboardHandler();
-            _lowLevlHook = new LowLevlHook();
-            _callbackFunction = new CallbackFunction(_keyboardHandler, _lowLevlHook);
-            _callbackEvent = new Action<RawInputData>((x)=> _keyboardHandler.Handler(x));
+            _callbackEvent = new Action<RawInputData>((x) => _keyboardHandler.Handler(x));
         }
 
         public async Task<ICallBack> Subscribe()
@@ -76,7 +74,7 @@ namespace FVH.Background.InputHandler
                          new RawInputDeviceRegistration(HidUsageAndPage.Mouse, RawInputDeviceFlags.InputSink, ProxyInputHandlerWindow.Handle),
                          new RawInputDeviceRegistration(HidUsageAndPage.Keyboard, RawInputDeviceFlags.InputSink, ProxyInputHandlerWindow.Handle)
                 };
-         
+
                 RawInputDevice.RegisterDevice(devices);
                 ProxyInputHandlerWindow.AddHook(WndProc);
 
@@ -92,17 +90,21 @@ namespace FVH.Background.InputHandler
                                 _callbackEvent.Invoke(data);
 
 
-                               //  CallbackEvent?.Invoke(data ?? throw new NullReferenceException($"{nameof(RawInputData)} cannot be null"));
+                                //  CallbackEvent?.Invoke(data ?? throw new NullReferenceException($"{nameof(RawInputData)} cannot be null"));
                             }
                             break;
                     }
                     return hwnd;
                 }
+
+                _lowLevlHook = new LowLevlHook();
+                _lowLevlHook.InstallHook();
+                _callbackFunction = new CallbackFunction(_keyboardHandler, _lowLevlHook);
             }, DispatcherPriority.Render);
 
             isItialized = true;
             WaitHandleStartWindow.Dispose();
-            return _callbackFunction;
+            return _callbackFunction is not null? _callbackFunction: throw new NullReferenceException($"{nameof(_callbackFunction)} cannot be null");
         }
 
 
@@ -121,7 +123,7 @@ namespace FVH.Background.InputHandler
             HwndSource? ProxyInputHandlerWindow = null;
             Thread winThread = new Thread(() =>
             {
-               
+
                 HwndSourceParameters configInitWindow = new HwndSourceParameters($"InputHandlerExtension-{Path.GetRandomFileName}", 0, 0)
                 {
                     WindowStyle = 0x800000
@@ -149,8 +151,8 @@ namespace FVH.Background.InputHandler
     }
     public interface IHandler
     {
-        public List<VKeys> IsPressedKeys { get;}
-      
+        public List<VKeys> IsPressedKeys { get; }
+
         public event EventHandler<DataKeysNotificator>? KeyPressEvent;
 
         public void Handler(RawInputData data);

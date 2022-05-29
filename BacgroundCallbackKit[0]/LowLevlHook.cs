@@ -3,7 +3,7 @@ using System.Runtime.InteropServices;
 
 namespace FVH.Background.Input
 {
-    internal class LowLevlHook : IAsyncDisposable
+    public class LowLevlHook : IAsyncDisposable
     {
 
         public async ValueTask DisposeAsync() => await Task.Run(() => { UninstallHook(); GC.SuppressFinalize(this); });
@@ -17,6 +17,8 @@ namespace FVH.Background.Input
         {
             hookHandler = HookFunc;
             hookID = SetHook(hookHandler);
+           // IntPtr bb = GetModuleHandleW(Process.GetCurrentProcess().MainModule is not ProcessModule module2 ? throw new NullReferenceException() : module2.ModuleName ?? throw new NullReferenceException());
+           
         }
 
         ~LowLevlHook() => UninstallHook();
