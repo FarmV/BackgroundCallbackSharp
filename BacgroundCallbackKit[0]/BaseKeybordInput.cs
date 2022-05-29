@@ -25,7 +25,7 @@ namespace FVH.BackgroundInput
                 get;
             }
         }
-        internal class KeyBordBaseRawInput
+        internal class KeyboardHandler
         {
             internal static List<VKeys> IsPressedKeys => _isPressedKeys.ToList();
 
@@ -35,7 +35,7 @@ namespace FVH.BackgroundInput
 
      
             private static readonly object _lockObject = new object();
-            internal void RawInputHandler(RawInputData data)
+            internal void Handler(RawInputData data, Action<DataKeysNotificator> action)
             {
                 if (data is not RawInputKeyboardData keyboardData) return;
 
