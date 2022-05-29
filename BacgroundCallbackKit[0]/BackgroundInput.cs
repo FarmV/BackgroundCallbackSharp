@@ -34,20 +34,24 @@ namespace FVH.Background.InputHandler
 
 
         private bool isItialized = false;
-        private static Action<RawInputData>? _callback = null;
+        readonly Action<RawInputData> _callbackEvent;
+        readonly KeyboardHandler _keyboardHandler;
+        readonly LowLevlHook _lowLevlHook;
+        readonly CallbackFunction _callbackFunction;
 
-
-
-        public async Task Subscribe()
+        public Input()
         {
-            await Subscribe();
+            _keyboardHandler = new KeyboardHandler();
+            _lowLevlHook = new LowLevlHook();
+            _callbackFunction = new CallbackFunction(_keyboardHandler, _lowLevlHook);
+            _callbackEvent = new Action<RawInputData>((x)=> _keyboardHandler.Handler(x));
         }
 
-        public async Task Subscribe(Action<RawInputData> callback)
+        public async Task<ICallBack> Subscribe()
         {
             if (isItialized is true) throw new InvalidOperationException("You cannot reinitialize the same class instance");
             EventWaitHandle WaitHandleStartWindow = new EventWaitHandle(false, EventResetMode.ManualReset);
-            _callback = callback;
+
 
             Thread winThread = new Thread(() =>
             {
@@ -76,7 +80,7 @@ namespace FVH.Background.InputHandler
                 RawInputDevice.RegisterDevice(devices);
                 ProxyInputHandlerWindow.AddHook(WndProc);
 
-                static IntPtr WndProc(IntPtr hwnd, int msg, IntPtr wParam, IntPtr lParam, ref bool handled)
+                IntPtr WndProc(IntPtr hwnd, int msg, IntPtr wParam, IntPtr lParam, ref bool handled)
                 {
                     const int WM_INPUT = 0x00FF;
                     switch (msg)
@@ -84,7 +88,11 @@ namespace FVH.Background.InputHandler
                         case WM_INPUT:
                             {
                                 RawInputData data = RawInputData.FromHandle(lParam);
-                                _callback?.Invoke(data ?? throw new NullReferenceException($"{nameof(RawInputData)} cannot be null"));
+
+                                _callbackEvent.Invoke(data);
+
+
+                               //  CallbackEvent?.Invoke(data ?? throw new NullReferenceException($"{nameof(RawInputData)} cannot be null"));
                             }
                             break;
                     }
@@ -94,7 +102,10 @@ namespace FVH.Background.InputHandler
 
             isItialized = true;
             WaitHandleStartWindow.Dispose();
+            return _callbackFunction;
         }
+
+
     }
 
 
