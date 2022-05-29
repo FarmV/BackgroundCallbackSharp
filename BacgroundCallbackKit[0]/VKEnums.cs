@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace FVH.BackgroundInput
+namespace FVH.Background.Input
 {
     public enum VKeys
     {

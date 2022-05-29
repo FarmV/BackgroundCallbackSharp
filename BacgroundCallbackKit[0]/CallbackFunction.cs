@@ -1,8 +1,6 @@
 ﻿using System.Diagnostics.CodeAnalysis;
 
-using static FVH.BackgroundInput.BaseKeybordInput;
-
-namespace FVH.BackgroundInput
+namespace FVH.Background.Input
 {
     internal class VKeysEqualityComparer : IEqualityComparer<VKeys[]>
     {
@@ -10,7 +8,7 @@ namespace FVH.BackgroundInput
         public int GetHashCode([DisallowNull] VKeys[] obj) => 0;
 
     }
-    internal class KeyboardKeyCallbackFunction : IAsyncDisposable
+    internal class CallbackFunction : IAsyncDisposable
     {
         public async ValueTask DisposeAsync() => await Task.Run(async () =>
         {
@@ -19,7 +17,7 @@ namespace FVH.BackgroundInput
             GC.SuppressFinalize(this);
         });
 
-        public KeyboardKeyCallbackFunction(BaseKeybordInput.KeyboardHandler keyboardHandler, LowLevlHook lowLevlHook)
+        public CallbackFunction(KeyboardHandler keyboardHandler, LowLevlHook lowLevlHook)
         {
             _keyboardHandler = keyboardHandler;
             _lowlevlhook = lowLevlHook;
@@ -105,7 +103,7 @@ namespace FVH.BackgroundInput
         }
 
         private LowLevlHook _lowlevlhook;
-        private BaseKeybordInput.KeyboardHandler _keyboardHandler;
+        private KeyboardHandler _keyboardHandler;
         private async Task<VKeys?> PreKeys(List<VKeys> keys)
         {
             if (_lowlevlhook is null) throw new NullReferenceException(nameof(LowLevlHook));

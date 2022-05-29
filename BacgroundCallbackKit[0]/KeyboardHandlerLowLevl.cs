@@ -1,7 +1,7 @@
 ﻿using System.Diagnostics;
 using System.Runtime.InteropServices;
 
-namespace FVH.BackgroundInput
+namespace FVH.Background.Input
 {
     internal class LowLevlHook : IAsyncDisposable
     {

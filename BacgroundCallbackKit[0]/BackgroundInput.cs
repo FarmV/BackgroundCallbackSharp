@@ -1,4 +1,4 @@
-﻿using FVH.BackgroundInput;
+﻿using FVH.Background.Input;
 
 using Linearstar.Windows.RawInput;
 
@@ -9,7 +9,7 @@ using System.Windows;
 using System.Windows.Interop;
 using System.Windows.Threading;
 
-using static FVH.BackgroundInput.BaseKeybordInput;
+using static FVH.Background.Input.KeyboardHandler;
 
 namespace FVH.Background.InputHandler
 {
