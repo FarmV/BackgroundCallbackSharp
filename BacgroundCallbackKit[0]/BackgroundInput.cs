@@ -1,5 +1,7 @@
 ﻿
 
+using FVH.BackgroundInput;
+
 using Linearstar.Windows.RawInput;
 
 using System;
@@ -13,7 +15,7 @@ namespace FVH.Background.InputHandler
     public class Input : IDisposable
     {
         private volatile HwndSource? ProxyInputHandlerWindow;
-      
+
 
         private bool isDispose = false;
         public void Dispose()
@@ -21,15 +23,23 @@ namespace FVH.Background.InputHandler
             if (isDispose is true) return;
             ProxyInputHandlerWindow?.Dispatcher?.InvokeShutdown();
             ProxyInputHandlerWindow?.Dispose();
+
             isDispose = true;
             GC.SuppressFinalize(this);
+
         }
+
         ~Input() => Dispose();
 
 
         private bool isItialized = false;
-        private static Action<string>? _callback = null;
-        public async Task Subscribe(Action<string> callback)
+        private static Action<RawInputData>? _callback = null;
+
+
+
+        public async Task Subscribe() => await Subscribe();
+
+        public async Task Subscribe(Action<RawInputData> callback)
         {
             if (isItialized is true) throw new InvalidOperationException("You cannot reinitialize the same class instance");
             EventWaitHandle WaitHandleStartWindow = new EventWaitHandle(false, EventResetMode.ManualReset);
@@ -58,7 +68,7 @@ namespace FVH.Background.InputHandler
                          new RawInputDeviceRegistration(HidUsageAndPage.Mouse, RawInputDeviceFlags.InputSink, ProxyInputHandlerWindow.Handle),
                          new RawInputDeviceRegistration(HidUsageAndPage.Keyboard, RawInputDeviceFlags.InputSink, ProxyInputHandlerWindow.Handle)
                 };
-
+         
                 RawInputDevice.RegisterDevice(devices);
                 ProxyInputHandlerWindow.AddHook(WndProc);
 
@@ -70,7 +80,7 @@ namespace FVH.Background.InputHandler
                         case WM_INPUT:
                             {
                                 RawInputData data = RawInputData.FromHandle(lParam);
-                                _callback?.Invoke(data.ToString() ?? throw new NullReferenceException($"{nameof(RawInputData)} cannot be null"));
+                                _callback?.Invoke(data ?? throw new NullReferenceException($"{nameof(RawInputData)} cannot be null"));
                             }
                             break;
                     }
@@ -79,7 +89,7 @@ namespace FVH.Background.InputHandler
             }, DispatcherPriority.Render);
 
             isItialized = true;
-            WaitHandleStartWindow.Dispose();           
+            WaitHandleStartWindow.Dispose();
         }
     }
 
@@ -87,16 +97,6 @@ namespace FVH.Background.InputHandler
 
     public class ExtensionInput //: IDisposable
     {
-
-        //private bool isDispose = false;
-        //public void Dispose()
-        //{
-        //    if (isDispose is true) return;
-
-        //    isDispose = true;
-        //    GC.SuppressFinalize(this);
-        //}
-        //~ExtensionInput() => Dispose();
         private bool isItialized = false;
         public Task<HwndSource> GetOneInstanceProxyWindow()
         {
@@ -126,9 +126,11 @@ namespace FVH.Background.InputHandler
 
     }
 
-    public interface IBcakInput
+    public interface IInputHandler
     {
-
+        public Task AddCallBackTask(VKeys[] keyCombo, Func<Task> callbackTask, bool isOneKey = false);
+        public Task<bool> ContainsKeyComibantion(VKeys[] keyCombo);
+        public Task<IEnumerable<KeyValuePair<VKeys[], Func<Task>>>> ReturnCollectionRegistrationFunction();
     }
 
 
