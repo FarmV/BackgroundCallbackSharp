@@ -10,14 +10,20 @@ namespace FVH.Background.Input
         public int GetHashCode([DisallowNull] VKeys[] obj) => 0;
 
     }
-    internal class CallbackFunction : IAsyncDisposable, ICallBack
+    internal class CallbackFunction : IDisposable, ICallBack
     {
-        public async ValueTask DisposeAsync() => await Task.Run(async () =>
-        { 
-           _lowlevlhook?.Dispose();
 
-            GC.SuppressFinalize(this);
-        });
+        public bool IsDispose { get; private set; }
+      
+        public void Dispose() 
+        {
+            if (IsDispose) return;
+            _lowlevlhook?.Dispose();
+
+            IsDispose = true;
+            GC.SuppressFinalize(this);       
+        }
+   
 
         public CallbackFunction(KeyboardHandler keyboardHandler, LowLevlHook lowLevlHook)
         {
@@ -182,8 +188,6 @@ namespace FVH.Background.Input
         {
             return Tasks.FunctionsCallback.ContainsKey(keyCombo) is true;
         });
-
-
 
     }
 

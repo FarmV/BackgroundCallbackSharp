@@ -23,12 +23,21 @@ namespace FVH.Background.InputHandler
         {
             if (isDispose is true) return;
             ProxyInputHandlerWindow?.Dispatcher?.InvokeShutdown();
-            _lowLevlHook?.Dispose();          
+            _lowLevlHook?.Dispose();
             isDispose = true;
             GC.SuppressFinalize(this);
         }
 
-        ~Input() => Dispose();
+        ~Input()
+        {
+            if (isDispose is true) return;
+            try
+            {
+                _lowLevlHook?.Dispose();
+                ProxyInputHandlerWindow?.Dispose();              
+            }
+            catch { }
+        }
 
 
         private bool isItialized = false;
@@ -102,7 +111,7 @@ namespace FVH.Background.InputHandler
 
             isItialized = true;
             WaitHandleStartWindow.Dispose();
-            return _callbackFunction is not null? _callbackFunction: throw new NullReferenceException($"{nameof(_callbackFunction)} cannot be null");
+            return _callbackFunction is not null ? _callbackFunction : throw new NullReferenceException($"{nameof(_callbackFunction)} cannot be null");
         }
 
 
@@ -141,7 +150,7 @@ namespace FVH.Background.InputHandler
 
     }
 
-    public interface ICallBack
+    public interface ICallBack : IDisposable
     {
         public Task AddCallBackTask(VKeys[] keyCombo, Func<Task> callbackTask, bool isOneKey = false);
         public Task<bool> ContainsKeyComibantion(VKeys[] keyCombo);

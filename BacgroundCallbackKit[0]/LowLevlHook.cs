@@ -1,9 +1,10 @@
 ﻿using System.Diagnostics;
+using System.Runtime.ConstrainedExecution;
 using System.Runtime.InteropServices;
 
 namespace FVH.Background.Input
 {
-    public class LowLevlHook : IDisposable
+    public class LowLevlHook : CriticalFinalizerObject, IDisposable
     {
 
         public void Dispose() 
