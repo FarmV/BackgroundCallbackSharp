@@ -24,15 +24,14 @@ namespace FVH.Background.Input
             GC.SuppressFinalize(this);       
         }
    
-
         public CallbackFunction(KeyboardHandler keyboardHandler, LowLevlHook lowLevlHook)
         {
             _keyboardHandler = keyboardHandler;
             _lowlevlhook = lowLevlHook;
-            _keyboardHandler.KeyPressEvent += _keyboardHandler_KeyPressEvent;
+            _keyboardHandler.KeyPressEvent += KeyboardHandler_KeyPressEvent;
         }
 
-        private async void _keyboardHandler_KeyPressEvent(object? sender, DataKeysNotificator e)
+        private async void KeyboardHandler_KeyPressEvent(object? sender, DataKeysNotificator e)
         {
             VKeys[] pressedKeys = e.Keys;
             if (pressedKeys.Length is 0) return;
