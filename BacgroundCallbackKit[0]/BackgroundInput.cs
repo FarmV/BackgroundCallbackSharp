@@ -142,7 +142,7 @@ namespace FVH.Background.InputHandler
         }
     }
 
-    public interface ICallBack : IDisposable
+    public interface ICallBack 
     {
         public Task AddCallBackTask(VKeys[] keyCombo, Func<Task> callbackTask);
         public Task<bool> ContainsKeyComibantion(VKeys[] keyCombo);

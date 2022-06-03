@@ -10,31 +10,33 @@ namespace FVH.Background.Input
         public int GetHashCode([DisallowNull] VKeys[] obj) => 0;
 
     }
-    internal class CallbackFunction : IDisposable, ICallBack
+    internal class CallbackFunction : ICallBack
     {
-
-        public bool IsDispose { get; private set; }
-
-        public void Dispose()
-        {
-            if (IsDispose) return;
-            _lowlevlhook?.Dispose();
-
-            IsDispose = true;
-            GC.SuppressFinalize(this);
-        }
+        private readonly LowLevlHook _lowlevlhook;
+        private readonly KeyboardHandler _keyboardHandler;
+        private readonly Dictionary<VKeys[], Func<Task>> FunctionsCallback = new Dictionary<VKeys[], Func<Task>>(new VKeysEqualityComparer());
 
         public CallbackFunction(KeyboardHandler keyboardHandler, LowLevlHook lowLevlHook)
         {
-            _keyboardHandler = keyboardHandler;
+            _keyboardHandler = keyboardHandler;    
             _lowlevlhook = lowLevlHook;
             _keyboardHandler.KeyPressEvent += KeyboardHandler_KeyPressEvent;
         }
 
         private async void KeyboardHandler_KeyPressEvent(object? sender, DataKeysNotificator e)
         {
+            async Task<bool> InokeOneKey(VKeys key)
+            {
+                Func<Task>[] result = FunctionsCallback.Keys.Where(x => x.Length == 1 & x[0] == key).Select(x=> FunctionsCallback[x]).ToArray();
+                if (result.Length == 0) return false;
+                if (result.Length > 1) throw new InvalidOperationException("A collection cannot contain more than one function with the same key");
+                await InvokFunctions(result[0]);
+                return true; 
+            } 
             VKeys[] pressedKeys = e.Keys;
-            if (pressedKeys.Length is 0) return;
+            if (pressedKeys.Length is 0 || (pressedKeys.Length is 1 && await InokeOneKey(e.Keys[0]) is true)) return;
+         
+
 
             List<VKeys> listPreKeys = new List<VKeys>();
 
@@ -71,7 +73,7 @@ namespace FVH.Background.Input
             var listPreKeys2 = listPreKeys.Distinct().ToList();
             if (listPreKeys2.Count > 0)
             {
-                VKeys? callhook = await PreKeys(listPreKeys);
+                VKeys? callhook = await PreKeys(listPreKeys).ConfigureAwait(false);
                 if (callhook.HasValue is true)
                 {
                     VKeys[] preseedKeys1 = pressedKeys.Append(callhook.Value).ToArray();
@@ -92,26 +94,28 @@ namespace FVH.Background.Input
 
             if (keys.Count is 0) return;
             if (keys.Count > 1) throw new InvalidOperationException();
-            _ = Task.Run(() =>
-            {
-                try
-                {
-                    FunctionsCallback[keys[0]].Invoke().Start();
-                }
-                catch (InvalidOperationException)
-                {
-                    throw;
-                }
-                catch (Exception)
-                {
 
-                }
-            }).ConfigureAwait(false);
-
+         
+            await InvokFunctions(FunctionsCallback[keys[0]]);
         }
 
-        private LowLevlHook _lowlevlhook;
-        private KeyboardHandler _keyboardHandler;
+        private Task InvokFunctions(Func<Task> function)
+        {
+            try
+            {
+                function.Invoke().Start();
+            }
+            catch (InvalidOperationException)
+            {
+                throw;
+            }
+            catch (Exception)
+            {
+
+            }
+            return Task.CompletedTask;
+        }
+
         private async Task<VKeys?> PreKeys(List<VKeys> keys)
         {
             if (_lowlevlhook is null) throw new NullReferenceException(nameof(LowLevlHook));
@@ -145,11 +149,9 @@ namespace FVH.Background.Input
             return res;
         }
 
-        private readonly Dictionary<VKeys[], Func<Task>> FunctionsCallback = new Dictionary<VKeys[], Func<Task>>(new VKeysEqualityComparer());
+        
 
         private object _lockMedthod = new object();
-
-
         public Task AddCallBackTask(VKeys[] keyCombo, Func<Task> callbackTask)
         {
             lock (_lockMedthod)

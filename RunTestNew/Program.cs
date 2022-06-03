@@ -8,8 +8,8 @@ namespace RunTestNew
     {
         static async Task Main(string[] args)
         {
-            Input input = new Input();
-            using ICallBack? callBack = await input.Subscribe();
+          using Input input = new Input();
+          ICallBack? callBack = await input.Subscribe();
 
             await callBack.AddCallBackTask
                    (
@@ -19,10 +19,13 @@ namespace RunTestNew
                        VKeys.VK_CONTROL,
                        VKeys.VK_SPACE
                      },
-                     () => new Task(() => { MessageBox.Show("OK =)"); })
+                     () => new Task(() => 
+                     { 
+                         MessageBox.Show("OK =)"); 
+                     })
                    );
 
-            await Task.Delay(TimeSpan.FromSeconds(15));
+            await Task.Delay(TimeSpan.FromSeconds(40));
 
             Environment.Exit(0);
 
