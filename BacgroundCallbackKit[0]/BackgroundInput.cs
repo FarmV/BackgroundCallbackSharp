@@ -17,7 +17,6 @@ namespace FVH.Background.InputHandler
     {
         private volatile HwndSource? ProxyInputHandlerWindow;
 
-
         private bool isDispose = false;
         public void Dispose()
         {
@@ -114,7 +113,7 @@ namespace FVH.Background.InputHandler
 
 
 
-    public class ExtensionInput //: IDisposable
+    public class ExtensionInput 
     {
         private bool isItialized = false;
         public Task<HwndSource> GetOneInstanceProxyWindow()
@@ -125,7 +124,6 @@ namespace FVH.Background.InputHandler
             HwndSource? ProxyInputHandlerWindow = null;
             Thread winThread = new Thread(() =>
             {
-
                 HwndSourceParameters configInitWindow = new HwndSourceParameters($"InputHandlerExtension-{Path.GetRandomFileName}", 0, 0)
                 {
                     WindowStyle = 0x800000
@@ -142,7 +140,6 @@ namespace FVH.Background.InputHandler
             isItialized = true;
             return Task.FromResult(ProxyInputHandlerWindow is not null ? ProxyInputHandlerWindow : throw new NullReferenceException());
         }
-
     }
 
     public interface ICallBack : IDisposable
