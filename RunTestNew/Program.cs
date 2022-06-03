@@ -8,8 +8,8 @@ namespace RunTestNew
     {
         static async Task Main(string[] args)
         {
-          using Input input = new Input();
-          ICallBack? callBack = await input.Subscribe();
+            using Input input = new Input();
+            ICallBack? callBack = await input.Subscribe();
 
             await callBack.AddCallBackTask
                    (
@@ -19,13 +19,63 @@ namespace RunTestNew
                        VKeys.VK_CONTROL,
                        VKeys.VK_SPACE
                      },
-                     () => new Task(() => 
-                     { 
-                         MessageBox.Show("OK =)"); 
+                     () => new Task(() =>
+                     {
+                         MessageBox.Show("OK 1");
+                     })
+                   );
+            await callBack.AddCallBackTask
+                   (
+                     new VKeys[]
+                     {
+                       VKeys.VK_SPACE,
+                       VKeys.VK_KEY_R,
+                     },
+                     () => new Task(() =>
+                     {
+                         MessageBox.Show("OK 2");
+                     })
+                   );
+            await callBack.AddCallBackTask
+                   (
+                     new VKeys[]
+                     {
+                       VKeys.VK_SHIFT,
+                       VKeys.VK_CONTROL,
+                       VKeys.VK_NUMPAD9
+                     },
+                     () => new Task(() =>
+                     {
+                         MessageBox.Show("OK 2");
+                     })
+                   );
+                            
+            await callBack.AddCallBackTask
+                   (
+                     new VKeys[]
+                     {
+                       VKeys.VK_KEY_G,
+
+                     },
+                     () => new Task(() =>
+                     {
+                         MessageBox.Show("OK 3");
+                     })
+                   );
+              await callBack.AddCallBackTask
+                   (
+                     new VKeys[]
+                     {
+                       VKeys.VK_KEY_G,
+
+                     },
+                     () => new Task(() =>
+                     {
+                         MessageBox.Show("OK 4");
                      })
                    );
 
-            await Task.Delay(TimeSpan.FromSeconds(40));
+            await Task.Delay(TimeSpan.FromSeconds(250));
 
             Environment.Exit(0);
 
