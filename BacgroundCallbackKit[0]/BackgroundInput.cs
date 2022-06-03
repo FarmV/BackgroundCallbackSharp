@@ -144,9 +144,9 @@ namespace FVH.Background.InputHandler
 
     public interface ICallBack : IDisposable
     {
-        public Task AddCallBackTask(VKeys[] keyCombo, Func<Task> callbackTask, bool isOneKey = false);
+        public Task AddCallBackTask(VKeys[] keyCombo, Func<Task> callbackTask);
         public Task<bool> ContainsKeyComibantion(VKeys[] keyCombo);
-        public Task<IEnumerable<KeyValuePair<VKeys[], Func<Task>>>> ReturnCollectionRegistrationFunction();
+        public Task<IEnumerable<KeyValuePair<VKeys[], Func<Task>>>> ReturnRegisteredFunctions();
     }
     public interface IHandler
     {

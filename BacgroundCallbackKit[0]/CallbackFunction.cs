@@ -14,16 +14,16 @@ namespace FVH.Background.Input
     {
 
         public bool IsDispose { get; private set; }
-      
-        public void Dispose() 
+
+        public void Dispose()
         {
             if (IsDispose) return;
             _lowlevlhook?.Dispose();
 
             IsDispose = true;
-            GC.SuppressFinalize(this);       
+            GC.SuppressFinalize(this);
         }
-   
+
         public CallbackFunction(KeyboardHandler keyboardHandler, LowLevlHook lowLevlHook)
         {
             _keyboardHandler = keyboardHandler;
@@ -39,7 +39,7 @@ namespace FVH.Background.Input
             List<VKeys> listPreKeys = new List<VKeys>();
 
             List<VKeys[]> fullV = new List<VKeys[]>();
-            List<VKeys[]> keys = Tasks.FunctionsCallback.Keys.Where(itemKeyArray =>  // Почему то метод пропускается при активации формы в хуке
+            List<VKeys[]> keys = FunctionsCallback.Keys.Where(itemKeyArray =>  // Почему то метод пропускается при активации формы в хуке
             {
                 for (int i = 0; i < pressedKeys.Length; i++)
                 {
@@ -67,7 +67,7 @@ namespace FVH.Background.Input
                 keys.Clear();
                 keys.Add(fullV.ToArray()[0]);
             }
-     
+
             var listPreKeys2 = listPreKeys.Distinct().ToList();
             if (listPreKeys2.Count > 0)
             {
@@ -76,7 +76,7 @@ namespace FVH.Background.Input
                 {
                     VKeys[] preseedKeys1 = pressedKeys.Append(callhook.Value).ToArray();
 
-                    keys = Tasks.FunctionsCallback.Keys.Where(x =>
+                    keys = FunctionsCallback.Keys.Where(x =>
                     {
                         for (int i = 0; i < preseedKeys1.Length; i++)
                         {
@@ -96,7 +96,7 @@ namespace FVH.Background.Input
             {
                 try
                 {
-                    Tasks.FunctionsCallback[keys[0]].Invoke().Start();
+                    FunctionsCallback[keys[0]].Invoke().Start();
                 }
                 catch (InvalidOperationException)
                 {
@@ -142,40 +142,34 @@ namespace FVH.Background.Input
                 if (ret is true) break;
                 await Task.Delay(1);
             }
-            return res;           
+            return res;
         }
 
-        private class Tasks
-        {
-            internal static Dictionary<VKeys[], Func<Task>> FunctionsCallback = new Dictionary<VKeys[], Func<Task>>(new VKeysEqualityComparer());
-        }
-
+        private readonly Dictionary<VKeys[], Func<Task>> FunctionsCallback = new Dictionary<VKeys[], Func<Task>>(new VKeysEqualityComparer());
 
         private object _lockMedthod = new object();
 
 
-        public Task AddCallBackTask(VKeys[] keyCombo, Func<Task> callbackTask, bool isOneKey = default)
+        public Task AddCallBackTask(VKeys[] keyCombo, Func<Task> callbackTask)
         {
             lock (_lockMedthod)
             {
-              
-                if (keyCombo.Length is 0) throw new InvalidOperationException($"One key to register with the key was transferred {nameof(isOneKey)} false");
 
-                if (Tasks.FunctionsCallback.ContainsKey(keyCombo) is true) throw new InvalidOperationException("The key combination(s) is already registered");
+                if (keyCombo.Length is 0) throw new ArgumentException($"The number of keys cannot be zero");
 
-                if (keyCombo.Length is 1 & isOneKey is false) throw new InvalidOperationException("Unable to register an empty key combination");
+                if (FunctionsCallback.ContainsKey(keyCombo) is true) throw new InvalidOperationException("The key combination(s) is already registered");
 
-                Tasks.FunctionsCallback.Add(keyCombo, callbackTask);
+                FunctionsCallback.Add(keyCombo, callbackTask);
 
                 return Task.CompletedTask;
             }
         }
 
-        public Task<IEnumerable<KeyValuePair<VKeys[], Func<Task>>>> ReturnCollectionRegistrationFunction() => new Task<IEnumerable<KeyValuePair<VKeys[], Func<Task>>>>(() =>
+        public Task<IEnumerable<KeyValuePair<VKeys[], Func<Task>>>> ReturnRegisteredFunctions() => new Task<IEnumerable<KeyValuePair<VKeys[], Func<Task>>>>(() =>
         {
-            static IEnumerable<KeyValuePair<VKeys[], Func<Task>>> GetFunction()
+            IEnumerable<KeyValuePair<VKeys[], Func<Task>>> GetFunction()
             {
-                foreach (var item in Tasks.FunctionsCallback)
+                foreach (var item in FunctionsCallback)
                 {
                     yield return item;
                 }
@@ -183,10 +177,7 @@ namespace FVH.Background.Input
             return GetFunction();
         });
 
-        public Task<bool> ContainsKeyComibantion(VKeys[] keyCombo) => new Task<bool>(() =>
-        {
-            return Tasks.FunctionsCallback.ContainsKey(keyCombo) is true;
-        });
+        public Task<bool> ContainsKeyComibantion(VKeys[] keyCombo) => Task.FromResult(FunctionsCallback.ContainsKey(keyCombo));
 
     }
 
