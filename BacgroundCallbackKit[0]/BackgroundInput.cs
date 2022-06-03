@@ -22,6 +22,7 @@ namespace FVH.Background.InputHandler
         public void Dispose()
         {
             if (isDispose is true) return;
+            
             ProxyInputHandlerWindow?.Dispatcher?.InvokeShutdown();
             _lowLevlHook?.Dispose();
             isDispose = true;
@@ -34,17 +35,17 @@ namespace FVH.Background.InputHandler
             try
             {
                 _lowLevlHook?.Dispose();
-                ProxyInputHandlerWindow?.Dispose();              
+                ProxyInputHandlerWindow?.Dispose();
             }
             catch { }
         }
 
 
         private bool isItialized = false;
-        readonly Action<RawInputData> _callbackEvent;
-        KeyboardHandler _keyboardHandler;
-        LowLevlHook? _lowLevlHook;
-        CallbackFunction? _callbackFunction;
+        private readonly Action<RawInputData> _callbackEvent;
+        private readonly KeyboardHandler _keyboardHandler;
+        private LowLevlHook? _lowLevlHook;
+        private CallbackFunction? _callbackFunction;
 
         public Input()
         {
@@ -93,11 +94,7 @@ namespace FVH.Background.InputHandler
                         case WM_INPUT:
                             {
                                 RawInputData data = RawInputData.FromHandle(lParam);
-
                                 _callbackEvent.Invoke(data);
-
-
-                                //  CallbackEvent?.Invoke(data ?? throw new NullReferenceException($"{nameof(RawInputData)} cannot be null"));
                             }
                             break;
                     }
@@ -113,8 +110,6 @@ namespace FVH.Background.InputHandler
             WaitHandleStartWindow.Dispose();
             return _callbackFunction is not null ? _callbackFunction : throw new NullReferenceException($"{nameof(_callbackFunction)} cannot be null");
         }
-
-
     }
 
 
@@ -159,9 +154,7 @@ namespace FVH.Background.InputHandler
     public interface IHandler
     {
         public List<VKeys> IsPressedKeys { get; }
-
         public event EventHandler<DataKeysNotificator>? KeyPressEvent;
-
         public void Handler(RawInputData data);
     }
 

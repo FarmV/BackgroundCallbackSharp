@@ -1,17 +1,22 @@
 ﻿using System.Diagnostics;
+using System.Runtime.CompilerServices;
 using System.Runtime.ConstrainedExecution;
 using System.Runtime.InteropServices;
+using System.Windows.Media.TextFormatting;
 
 namespace FVH.Background.Input
 {
     public class LowLevlHook : CriticalFinalizerObject, IDisposable
     {
+        private bool _disposed = false;
 
-        public void Dispose() 
-        { 
-          UninstallHook(); 
-          GC.SuppressFinalize(this);
-        } 
+        public void Dispose()
+        {
+            if (_disposed is true) return;
+            UninstallHook();
+            _disposed = true;
+            GC.SuppressFinalize(this);
+        }
 
         private delegate IntPtr KeyboardHookHandler(int nCode, WMEvent wParam, TagKBDLLHOOKSTRUCT lParam);
         private KeyboardHookHandler? hookHandler;
@@ -20,20 +25,35 @@ namespace FVH.Background.Input
 
         public void InstallHook()
         {
+            CheckDisposed();
             hookHandler = HookFunc;
             hookID = SetHook(hookHandler);
-           // IntPtr bb = GetModuleHandleW(Process.GetCurrentProcess().MainModule is not ProcessModule module2 ? throw new NullReferenceException() : module2.ModuleName ?? throw new NullReferenceException());
-           
         }
 
-        ~LowLevlHook() => UninstallHook();
+        ~LowLevlHook()
+        {
+            try
+            {
+                if (_disposed is true) return;
+                UnhookWindowsHookEx(hookID);
+                Marshal.FreeHGlobal(hookID);
+            }
+            catch { }
+        }
 
-        public void UninstallHook() => UnhookWindowsHookEx(hookID);
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private void CheckDisposed() { if (_disposed is true) throw new ObjectDisposedException("You cannot use an instance of a class after it has been disposed of."); }
+
+
+        public void UninstallHook() { CheckDisposed(); UnhookWindowsHookEx(hookID); }
 
 
         private readonly int WH_KEYBOARD_LL = 13;
-        private IntPtr SetHook(KeyboardHookHandler proc) => SetWindowsHookEx(WH_KEYBOARD_LL, proc,
-                 GetModuleHandleW(Process.GetCurrentProcess().MainModule is not ProcessModule module2 ? throw new NullReferenceException() : module2.ModuleName ?? throw new NullReferenceException()), 0);
+        private IntPtr SetHook(KeyboardHookHandler proc) =>
+                        SetWindowsHookEx(WH_KEYBOARD_LL, proc,
+                         GetModuleHandleW(Process.GetCurrentProcess().MainModule is not ProcessModule module2 ?
+                          throw new NullReferenceException() : module2.ModuleName ?? throw new NullReferenceException()), 0);
+
 
 
         internal delegate void KeyboardHookCallback(VKeys key, SettingHook setting);
@@ -41,12 +61,12 @@ namespace FVH.Background.Input
 
 
         internal SettingHook Settings = new SettingHook();
-         
+
         private IntPtr HookFunc(int nCode, WMEvent wParam, TagKBDLLHOOKSTRUCT lParam)
-        {      
+        {
             if (nCode >= 0)
-            {                      
-                if ( wParam is WMEvent.WM_KEYDOWN || wParam is WMEvent.WM_SYSKEYDOWN ) 
+            {
+                if (wParam is WMEvent.WM_KEYDOWN || wParam is WMEvent.WM_SYSKEYDOWN)
                 {
                     KeyDown?.Invoke(lParam.Vkcode, Settings);
                     if (Settings.Break is true)
