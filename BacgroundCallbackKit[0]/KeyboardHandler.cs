@@ -35,6 +35,7 @@ namespace FVH.Background.Input
         public List<VKeys> IsPressedKeys => _isPressedKeys.ToList();
 
         public event EventHandler<DataKeysNotificator>? KeyPressEvent;
+        public event EventHandler<DataKeysNotificator>? KeyUpPressEvent;
 
         private readonly List<VKeys> _isPressedKeys = new List<VKeys>();
 
@@ -77,7 +78,7 @@ namespace FVH.Background.Input
                 {
                     if (_isPressedKeys.Contains(FlagVkeys) is not true) return;
                     _isPressedKeys.Remove(FlagVkeys);
-                    //ChangeTheKeyPressure?.Invoke(null, new DataKeysNotificator(IsPressedKeys.ToArray()));
+                    KeyUpPressEvent?.Invoke(null, new DataKeysNotificator(IsPressedKeys.ToArray()));
                     return;
                 }
             }

@@ -155,6 +155,7 @@ namespace FVH.Background.InputHandler
     {
         public List<VKeys> IsPressedKeys { get; }
         public event EventHandler<DataKeysNotificator>? KeyPressEvent;
+        public event EventHandler<DataKeysNotificator>? KeyUpPressEvent;
         internal void Handler(RawInputData data);
     }
 
