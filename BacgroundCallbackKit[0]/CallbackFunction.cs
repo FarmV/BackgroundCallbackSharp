@@ -227,21 +227,7 @@ namespace FVH.Background.Input
             }
         }
 
-        //public Task<IEnumerable<KeyValuePair<VKeys[], Func<Task>>>> ReturnRegisteredFunctions() => new Task<IEnumerable<KeyValuePair<VKeys[], Func<Task>>>>(() =>
-        //{
-        //    IEnumerable<KeyValuePair<VKeys[], Func<Task>>> GetFunction()
-        //    {
-        //        foreach (var item in FunctionsCallback)
-        //        {
-        //            yield return item;
-        //        }
-        //    }
-        //    return GetFunction();
-        //});
-
         public List<RegGroupFunction> ReturnGroupRegFunctions() => GlobalList.ToList();
-
-        //  public Task<bool> ContainsKeyComibantion(VKeys[] keyCombo) => Task.FromResult(FunctionsCallback.ContainsKey(keyCombo));
 
         public Task<bool> ContainsKeyComibantion(VKeys[] keyCombo) => Task.FromResult(GlobalList.SingleOrDefault(x => x.KeyCombination == keyCombo) is not null);
 
