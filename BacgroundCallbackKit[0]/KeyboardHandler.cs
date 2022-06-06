@@ -64,7 +64,7 @@ namespace FVH.Background.Input
 
             RawKeyboardFlags chekUPE0 = RawKeyboardFlags.Up | RawKeyboardFlags.KeyE0;
 
-            lock (_lockObject)
+            lock (_lockObject) // контрол + esacpe = ескейп только отжатый
             {
                 if (keyboardData.Keyboard.Flags is RawKeyboardFlags.None | keyboardData.Keyboard.Flags is RawKeyboardFlags.KeyE0) // клавиша KeyDown
                 {
