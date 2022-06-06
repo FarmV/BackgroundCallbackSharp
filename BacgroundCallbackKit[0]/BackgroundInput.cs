@@ -17,25 +17,34 @@ namespace FVH.Background.InputHandler
     {
         private volatile HwndSource? ProxyInputHandlerWindow;
 
-
         private bool isDispose = false;
         public void Dispose()
         {
             if (isDispose is true) return;
+            
             ProxyInputHandlerWindow?.Dispatcher?.InvokeShutdown();
-            _lowLevlHook?.Dispose();          
+            _lowLevlHook?.Dispose();
             isDispose = true;
             GC.SuppressFinalize(this);
         }
 
-        ~Input() => Dispose();
+        ~Input()
+        {
+            if (isDispose is true) return;
+            try
+            {
+                _lowLevlHook?.Dispose();
+                ProxyInputHandlerWindow?.Dispose();
+            }
+            catch { }
+        }
 
 
         private bool isItialized = false;
-        readonly Action<RawInputData> _callbackEvent;
-        KeyboardHandler _keyboardHandler;
-        LowLevlHook? _lowLevlHook;
-        CallbackFunction? _callbackFunction;
+        private readonly Action<RawInputData> _callbackEvent;
+        private readonly IHandler _keyboardHandler;
+        private LowLevlHook? _lowLevlHook;
+        private CallbackFunction? _callbackFunction;
 
         public Input()
         {
@@ -84,11 +93,7 @@ namespace FVH.Background.InputHandler
                         case WM_INPUT:
                             {
                                 RawInputData data = RawInputData.FromHandle(lParam);
-
                                 _callbackEvent.Invoke(data);
-
-
-                                //  CallbackEvent?.Invoke(data ?? throw new NullReferenceException($"{nameof(RawInputData)} cannot be null"));
                             }
                             break;
                     }
@@ -102,15 +107,15 @@ namespace FVH.Background.InputHandler
 
             isItialized = true;
             WaitHandleStartWindow.Dispose();
-            return _callbackFunction is not null? _callbackFunction: throw new NullReferenceException($"{nameof(_callbackFunction)} cannot be null");
+            return _callbackFunction is not null ? _callbackFunction : throw new NullReferenceException($"{nameof(_callbackFunction)} cannot be null");
         }
-
+        public IHandler GetHandler() => _keyboardHandler;
 
     }
 
 
 
-    public class ExtensionInput //: IDisposable
+    public class ExtensionInput 
     {
         private bool isItialized = false;
         public Task<HwndSource> GetOneInstanceProxyWindow()
@@ -121,7 +126,6 @@ namespace FVH.Background.InputHandler
             HwndSource? ProxyInputHandlerWindow = null;
             Thread winThread = new Thread(() =>
             {
-
                 HwndSourceParameters configInitWindow = new HwndSourceParameters($"InputHandlerExtension-{Path.GetRandomFileName}", 0, 0)
                 {
                     WindowStyle = 0x800000
@@ -138,22 +142,21 @@ namespace FVH.Background.InputHandler
             isItialized = true;
             return Task.FromResult(ProxyInputHandlerWindow is not null ? ProxyInputHandlerWindow : throw new NullReferenceException());
         }
-
     }
 
-    public interface ICallBack
+    public interface ICallBack 
     {
-        public Task AddCallBackTask(VKeys[] keyCombo, Func<Task> callbackTask, bool isOneKey = false);
+        public Task AddCallBackTask(VKeys[] keyCombo, Func<Task> callbackTask, object? identifier = null);
+        public Task<bool> DeleteATaskByAnIdentifier(object? identifier = null);
         public Task<bool> ContainsKeyComibantion(VKeys[] keyCombo);
-        public Task<IEnumerable<KeyValuePair<VKeys[], Func<Task>>>> ReturnCollectionRegistrationFunction();
+        public List<RegGroupFunction> ReturnGroupRegFunctions();
     }
     public interface IHandler
     {
         public List<VKeys> IsPressedKeys { get; }
-
         public event EventHandler<DataKeysNotificator>? KeyPressEvent;
-
-        public void Handler(RawInputData data);
+        public event EventHandler<DataKeysNotificator>? KeyUpPressEvent;
+        internal void Handler(RawInputData data);
     }
 
 
