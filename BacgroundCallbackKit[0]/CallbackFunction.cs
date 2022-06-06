@@ -2,42 +2,56 @@
 using FVH.Background.InputHandler;
 
 using System.Diagnostics.CodeAnalysis;
+using System.Linq;
 
 namespace FVH.Background.Input
 {
     internal class VKeysEqualityComparer : IEqualityComparer<VKeys[]>
     {
-        public bool Equals(VKeys[]? x, VKeys[]? y) => x is not null && y is not null && x.Length is not 0 && y.Length is not 0 && x.SequenceEqual(y);
+        public bool Equals(VKeys[]? x, VKeys[]? y)
+        {
+            if (x is null || y is null) return false;
+            if (x.Length is 0 || y.Length is 0) return false;
+            if (x.Length != y.Length) return false;
+            if (x.SequenceEqual(y)) return true;
+            if (x.Intersect(y).Count() == x.Length) return true;
+            return false;
+        }
         public int GetHashCode([DisallowNull] VKeys[] obj) => 0;
 
     }
-    internal class RegGroupFunction
+    public class RegGroupFunction
     {
-        public RegGroupFunction(int group, VKeys[] keyCombination, List<RegFunction> listOfRegisteredFunctions)
+        internal RegGroupFunction(int group, VKeys[] keyCombination, List<RegFunction> listOfRegisteredFunctions)
         {
             Group = group;
             ListOfRegisteredFunctions = listOfRegisteredFunctions;
             KeyCombination = keyCombination;
         }
-        internal VKeys[] KeyCombination { get; }
-        internal int Group { get; private set; }
-        internal List<RegFunction> ListOfRegisteredFunctions { get; }
+        public VKeys[] KeyCombination { get; }
+        private int _group;
+        public int Group
+        {
+            get { return _group; }
+            private set { if (value < 0) throw new InvalidOperationException("The value for the group cannot be negative"); _group = value; }
+        }
+        public List<RegFunction> ListOfRegisteredFunctions { get; }
     }
-    internal record RegFunction
+    public record RegFunction
     {
-        public RegFunction(Func<Task> callBackTask, object? identifier = null)
+        internal RegFunction(Func<Task> callBackTask, object? identifier = null)
         {
             CallBackTask = callBackTask;
             Identifier = identifier;
         }
-        internal object? Identifier { get; }
-        internal Func<Task> CallBackTask { get; }
+        public object? Identifier { get; }
+        public Func<Task> CallBackTask { get; }
     }
     internal class CallbackFunction : ICallBack
     {
         private readonly List<RegGroupFunction> GlobalList = new List<RegGroupFunction>();
         private readonly LowLevlHook _lowlevlhook;
-        private readonly KeyboardHandler _keyboardHandler;
+        private readonly IHandler _keyboardHandler;
         private readonly Dictionary<VKeys[], Func<Task>> FunctionsCallback = new Dictionary<VKeys[], Func<Task>>(new VKeysEqualityComparer());
 
         public CallbackFunction(KeyboardHandler keyboardHandler, LowLevlHook lowLevlHook)
@@ -50,124 +64,62 @@ namespace FVH.Background.Input
         {
             VKeys[] pressedKeys = e.Keys;
             async Task<bool> InvokeOneKey(VKeys key)
-            {
-                //Func<Task>[] resultOneInvoke = FunctionsCallback.Keys.Where(x => x.Length == 1 & x[0] == key).Select(x => FunctionsCallback[x]).ToArray();
-                IEnumerable<VKeys[]>? resultOneInvoke = FunctionsCallback.Keys.Where(x => x.Length == pressedKeys.Length).Where(x => x.Intersect(pressedKeys).Count() == x.Length);
-                IEnumerable<KeyValuePair<VKeys[], Func<Task>>> onekey = FunctionsCallback.Where(x => x.Key == resultOneInvoke.ToArray()[0]);
-                if (resultOneInvoke.Count() == 0) return false;
-                await InvokFunctions(onekey);
-                return true;
+            {             
+                RegGroupFunction? qR = GlobalList.SingleOrDefault(x => x.KeyCombination.Length == 1 & x.KeyCombination[0] == key);
+                if (qR is null) return false;
+                else
+                {
+                    await InvokFunctions2(qR.ListOfRegisteredFunctions);
+                    return true;
+                }
             }
-            if (pressedKeys.Length is 0 || (pressedKeys.Length is 1 && await InvokeOneKey(e.Keys[0]) is true)) return;
-
-            pressedKeys = new VKeys[]
+            if (pressedKeys.Length is 0) return;
+            if (pressedKeys.Length is 1)
             {
-                 VKeys.VK_SPACE,
-                 VKeys.VK_SHIFT,
-                 VKeys.VK_CONTROL
-            };
+                await InvokeOneKey(e.Keys[0]);
+                return;
+            }
 
+            IEnumerable<RegGroupFunction> queryPrewiev = GlobalList.Where(x => x.KeyCombination.Length == pressedKeys.Length + 1).Where(x => x.KeyCombination.Except(pressedKeys).Count() == 1);
 
-            //IEnumerable<VKeys[]>? hhh = FunctionsCallback.Keys.Where(x => x.Length == pressedKeys.Length).Where(x => x.Intersect(pressedKeys).Count() == x.Length);
-            //IEnumerable<KeyValuePair<VKeys[], Func<Task>>> rnmn = FunctionsCallback.Where(x => x.Key == hhh.ToArray()[0]);
+            if (queryPrewiev.Any() is false) return;
+            else
+            {               
+                IEnumerable<VKeys> preKeysGroup = queryPrewiev.Select(x => x.KeyCombination.Except(pressedKeys)).ToArray().Select(x => x.ToArray()[0]);
 
+                VKeys? preKeyInput = await PreKeys(preKeysGroup);
 
-            // var abcdg = GetFunctionToInvokeIdentical(hhh);
-
-            List<VKeys> listPreKeys = new List<VKeys>();
-
-            //List<VKeys[]> fullV = new List<VKeys[]>();
-            //List<VKeys[]> keys = FunctionsCallback.Keys.Where(itemKeyArray => 
-            //{
-            //    for (int i = 0; i < pressedKeys.Length; i++)
-            //    {
-            //        if (itemKeyArray.Any((xVkey) => xVkey == pressedKeys[i]) is not true) return false;
-            //        else
-            //        {
-            //            VKeys[] keyPre = itemKeyArray.Except(pressedKeys).ToArray();
-            //            if (keyPre.Length > 1) return false;
-            //            else
-            //            {
-            //                if (keyPre.Length is 0)
-            //                {
-            //                    //  fullV.Add(itemKeyArray); // Вообще надо бы сделать более эфективную с логической точки срения обработку.
-            //                    return false;
-            //                };
-            //                listPreKeys.Add(keyPre[0]);
-            //            }
-            //        }
-            //    }
-            //    return true;
-            //}).Where(x => x.Length == pressedKeys.Length).ToList();
-
-            //if (fullV.Count is 1 & listPreKeys.Count is 0)
-            //{
-            //    keys.Clear();
-            //    keys.Add(fullV.ToArray()[0]);
-            //}
-
-            //var listPreKeys2 = listPreKeys.Distinct().ToList();
-            //if (listPreKeys2.Count > 0)
-            //{
-            //    VKeys? callhook = await PreKeys(listPreKeys).ConfigureAwait(false);
-            //    if (callhook.HasValue is true)
-            //    {
-            //        VKeys[] preseedKeys1 = pressedKeys.Append(callhook.Value).ToArray();
-
-            //        keys = FunctionsCallback.Keys.Where(x =>
-            //        {
-            //            for (int i = 0; i < preseedKeys1.Length; i++)
-            //            {
-            //                if (x.Any((x) => x == preseedKeys1[i]) is not true)
-            //                {
-            //                    return false;
-            //                }
-            //            }
-            //            return true;
-            //        }).Where(x => x.Length == pressedKeys.Length + 1).ToList();
-            //    }
-            //}
-
-            //if (keys.Count is 0) return;
-            //if (keys.Count > 1) throw new InvalidOperationException();
-
-
-            //await InvokFunctions(FunctionsCallback[keys[0]]);
+                if(preKeyInput.HasValue is false) return;
+                else
+                {
+                    RegGroupFunction invokeQuery = queryPrewiev.Single(x => x.KeyCombination.Intersect(new VKeys[] { preKeyInput.Value }).Count() == 1);
+                    await InvokFunctions2(invokeQuery.ListOfRegisteredFunctions);
+                }
+            }          
         }
 
-        //private Task InvokFunctions(Func<Task> function)
-        //{
-        //    try
-        //    {
-        //        function.Invoke().Start();}              catch (InvalidOperationException)
-        //    {
-        //        throw;
-        //    }
-        //    catch (Exception)
-        //    {
-
-        //    }
-        //    return Task.CompletedTask;
-        //}
-        private Task InvokFunctions(IEnumerable<KeyValuePair<VKeys[], Func<Task>>> toTaskInvoke)
+        private Task InvokFunctions2(IEnumerable<RegFunction> toTaskInvoke)
         {
-            Action[] r = toTaskInvoke.AsParallel().Select(x => new Action(() =>
+            if (toTaskInvoke.Any() is false) throw new InvalidOperationException("The collection cannot be empty");
+
+            Parallel.Invoke(toTaskInvoke.Select(x => new Action(() =>
             {
                 try
                 {
-                    x.Value.Invoke().Start();
+                    x.CallBackTask.Invoke().Start();
+
                 }
                 catch (InvalidOperationException)
                 {
                     throw;
                 }
                 catch (Exception)
+
                 {
 
                 }
+            })).ToArray());
 
-            })).ToArray();
-            Parallel.Invoke(r);
             return Task.CompletedTask;
         }
 
@@ -182,9 +134,28 @@ namespace FVH.Background.Input
             void CheckKey(VKeys key, LowLevlHook.SettingHook setting)
             {
                 if (_lowlevlhook is null) throw new NullReferenceException(nameof(LowLevlHook));
-                if (keys.Contains(key))
+                VKeys? chekKey = null;
+                if (key == VKeys.VK_LCONTROL || key == VKeys.VK_RCONTROL) // Заглушки из за разности между RawInput(не рапознает правый левый) и хуком такк как прдположительно нужно менять исходную библиотеку.
                 {
-                    res = key;
+                    chekKey = VKeys.VK_CONTROL;
+                }
+                else if(key == VKeys.VK_LMENU || key == VKeys.VK_RMENU)
+                {
+                    chekKey = VKeys.VK_MENU;
+                }
+                else if(key == VKeys.VK_LSHIFT || key == VKeys.VK_RSHIFT)
+                {
+                    chekKey = VKeys.VK_SHIFT;
+                }
+                else
+                {
+                    chekKey = key;
+                }
+                if (chekKey.HasValue is false) throw new InvalidOperationException();
+                bool res1 = keys.Contains(chekKey.Value); 
+                if (keys.Contains(chekKey.Value))
+                {
+                    res = chekKey;
                     setting.Break = true;
                     _lowlevlhook.KeyDown -= CheckKey;
                     ret = true;
@@ -196,7 +167,7 @@ namespace FVH.Background.Input
                 }
             }
 
-            for (int i = 0; i < 20; i++)
+            for (int i = 0; i < 20 ; i++)
             {
                 if (ret is true) break;
                 await Task.Delay(1);
@@ -212,53 +183,68 @@ namespace FVH.Background.Input
             lock (_lockMedthod)
             {
 
-                if (keyCombo.Length is 0) throw new ArgumentException($"The number of keys cannot be zero");
-
-                FunctionsCallback.Add(keyCombo, callbackTask);
-
-                RegGroupFunction? queryCotainGroup = GlobalList.SingleOrDefault(x => x.KeyCombination == keyCombo);
+                RegGroupFunction? queryCotainGroup = GlobalList.SingleOrDefault(x => x.KeyCombination.SequenceEqual(keyCombo));
                 if (queryCotainGroup is not null) queryCotainGroup.ListOfRegisteredFunctions.Add(new RegFunction(callbackTask, identifier));
                 else
                 {
                     RegGroupFunction newGroupF = new RegGroupFunction(++GoupCount, keyCombo, new List<RegFunction>());
-                    newGroupF.ListOfRegisteredFunctions.Add(new RegFunction(callbackTask, identifier));                      
-                    GlobalList.Add(new RegGroupFunction(++GoupCount, keyCombo, new List<RegFunction>())); 
+                    newGroupF.ListOfRegisteredFunctions.Add(new RegFunction(callbackTask, identifier));
+                    GlobalList.Add(newGroupF);
                 }
 
                 return Task.CompletedTask;
             }
         }
-        public Task<bool> RemoveCallBackTask(object? identifier = null)
+        public Task<bool> DeleteATaskByAnIdentifier(object? identifier = null)
         {
-            if (identifier is null) return Task.FromResult(false);
-            RegFunction? queryF = null;
-            RegGroupFunction? queryResult = GlobalList.SingleOrDefault(x => 
+            lock (_lockMedthod)
             {
-                queryF = x.ListOfRegisteredFunctions.Single(fun => fun.Identifier == identifier);
-                return queryF is not null;
-            });
-            if(queryResult is null) return Task.FromResult(false);
-            if (queryF is null) throw new InvalidOperationException();
-            else 
-            {
-               if(queryResult.ListOfRegisteredFunctions.Remove(queryF) is not true) throw new InvalidOperationException();
-               else return Task.FromResult(true);
-            }      
-        }
-
-        public Task<IEnumerable<KeyValuePair<VKeys[], Func<Task>>>> ReturnRegisteredFunctions() => new Task<IEnumerable<KeyValuePair<VKeys[], Func<Task>>>>(() =>
-        {
-            IEnumerable<KeyValuePair<VKeys[], Func<Task>>> GetFunction()
-            {
-                foreach (var item in FunctionsCallback)
+                if (identifier is null) return Task.FromResult(false);
+                RegFunction? queryF = null;
+                RegGroupFunction? queryResult = GlobalList.SingleOrDefault(x =>
                 {
-                    yield return item;
+                    queryF = x.ListOfRegisteredFunctions.Single(fun => fun.Identifier == identifier);
+                    return queryF is not null;
+                });
+                if (queryResult is null) return Task.FromResult(false);
+                if (queryF is null) throw new InvalidOperationException();
+                else
+                {
+                    if (queryResult.ListOfRegisteredFunctions.Remove(queryF) is not true) throw new InvalidOperationException();
+                    else return Task.FromResult(true);
                 }
             }
-            return GetFunction();
-        });
+        }
+        public Task<bool> DeleteAGroupByKeyСombination(VKeys[] keyCombo)
+        {
+            lock (_lockMedthod)
+            {
+                if (keyCombo.Length is 0) return Task.FromResult(false);
+                RegGroupFunction? queyResult = GlobalList.SingleOrDefault(x => x.KeyCombination == keyCombo);
+                if (queyResult is null) return Task.FromResult(false);
+                if (GlobalList.Remove(queyResult) is not true) throw new InvalidOperationException();
+                return Task.FromResult(true);
+            }
+        }
 
-        public Task<bool> ContainsKeyComibantion(VKeys[] keyCombo) => Task.FromResult(FunctionsCallback.ContainsKey(keyCombo));
+        //public Task<IEnumerable<KeyValuePair<VKeys[], Func<Task>>>> ReturnRegisteredFunctions() => new Task<IEnumerable<KeyValuePair<VKeys[], Func<Task>>>>(() =>
+        //{
+        //    IEnumerable<KeyValuePair<VKeys[], Func<Task>>> GetFunction()
+        //    {
+        //        foreach (var item in FunctionsCallback)
+        //        {
+        //            yield return item;
+        //        }
+        //    }
+        //    return GetFunction();
+        //});
+
+        public List<RegGroupFunction> ReturnGroupRegFunctions2() => GlobalList.ToList();
+
+        //  public Task<bool> ContainsKeyComibantion(VKeys[] keyCombo) => Task.FromResult(FunctionsCallback.ContainsKey(keyCombo));
+
+        public Task<bool> ContainsKeyComibantion(VKeys[] keyCombo) => Task.FromResult(GlobalList.SingleOrDefault(x => x.KeyCombination == keyCombo) is not null);
+
 
     }
 

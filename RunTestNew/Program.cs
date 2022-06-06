@@ -28,8 +28,9 @@ namespace RunTestNew
                    (
                      new VKeys[]
                      {
-                       VKeys.VK_SPACE,
-                       VKeys.VK_KEY_R,
+                       VKeys.VK_SHIFT,
+                       VKeys.VK_CONTROL,
+                       VKeys.VK_BACK,
                      },
                      () => new Task(() =>
                      {
@@ -74,7 +75,22 @@ namespace RunTestNew
                          MessageBox.Show("OK 4");
                      })
                    );
+                             
+             await callBack.AddCallBackTask
+                  (
+                    new VKeys[]
+                    {
+                         VKeys.VK_SHIFT,
+                         VKeys.VK_CONTROL,
+                         VKeys.VK_KEY_Q
 
+                    },
+                    () => new Task(() =>
+                    {
+                        MessageBox.Show("OK 4");
+                    })
+                  );
+           
             await Task.Delay(TimeSpan.FromSeconds(250));
 
             Environment.Exit(0);
