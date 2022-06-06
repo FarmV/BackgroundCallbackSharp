@@ -42,7 +42,7 @@ namespace FVH.Background.InputHandler
 
         private bool isItialized = false;
         private readonly Action<RawInputData> _callbackEvent;
-        private readonly KeyboardHandler _keyboardHandler;
+        private readonly IHandler _keyboardHandler;
         private LowLevlHook? _lowLevlHook;
         private CallbackFunction? _callbackFunction;
 
@@ -109,6 +109,8 @@ namespace FVH.Background.InputHandler
             WaitHandleStartWindow.Dispose();
             return _callbackFunction is not null ? _callbackFunction : throw new NullReferenceException($"{nameof(_callbackFunction)} cannot be null");
         }
+        public IHandler GetHandler() => _keyboardHandler;
+
     }
 
 
@@ -147,13 +149,13 @@ namespace FVH.Background.InputHandler
         public Task AddCallBackTask(VKeys[] keyCombo, Func<Task> callbackTask, object? identifier = null);
         public Task<bool> DeleteATaskByAnIdentifier(object? identifier = null);
         public Task<bool> ContainsKeyComibantion(VKeys[] keyCombo);
-      //  public Task<IEnumerable<KeyValuePair<VKeys[], Func<Task>>>> ReturnRegisteredFunctions();
+        public List<RegGroupFunction> ReturnGroupRegFunctions();
     }
     public interface IHandler
     {
         public List<VKeys> IsPressedKeys { get; }
         public event EventHandler<DataKeysNotificator>? KeyPressEvent;
-        public void Handler(RawInputData data);
+        internal void Handler(RawInputData data);
     }
 
 

@@ -54,7 +54,7 @@ namespace FVH.Background.Input
         private readonly IHandler _keyboardHandler;
         private readonly Dictionary<VKeys[], Func<Task>> FunctionsCallback = new Dictionary<VKeys[], Func<Task>>(new VKeysEqualityComparer());
 
-        public CallbackFunction(KeyboardHandler keyboardHandler, LowLevlHook lowLevlHook)
+        public CallbackFunction(IHandler keyboardHandler, LowLevlHook lowLevlHook)
         {
             _keyboardHandler = keyboardHandler;
             _lowlevlhook = lowLevlHook;
@@ -69,7 +69,7 @@ namespace FVH.Background.Input
                 if (qR is null) return false;
                 else
                 {
-                    await InvokFunctions2(qR.ListOfRegisteredFunctions);
+                    await InvokFunctions(qR.ListOfRegisteredFunctions);
                     return true;
                 }
             }
@@ -93,12 +93,12 @@ namespace FVH.Background.Input
                 else
                 {
                     RegGroupFunction invokeQuery = queryPrewiev.Single(x => x.KeyCombination.Intersect(new VKeys[] { preKeyInput.Value }).Count() == 1);
-                    await InvokFunctions2(invokeQuery.ListOfRegisteredFunctions);
+                    await InvokFunctions(invokeQuery.ListOfRegisteredFunctions);
                 }
             }          
         }
 
-        private Task InvokFunctions2(IEnumerable<RegFunction> toTaskInvoke)
+        private Task InvokFunctions(IEnumerable<RegFunction> toTaskInvoke)
         {
             if (toTaskInvoke.Any() is false) throw new InvalidOperationException("The collection cannot be empty");
 
@@ -135,7 +135,7 @@ namespace FVH.Background.Input
             {
                 if (_lowlevlhook is null) throw new NullReferenceException(nameof(LowLevlHook));
                 VKeys? chekKey = null;
-                if (key == VKeys.VK_LCONTROL || key == VKeys.VK_RCONTROL) // Заглушки из за разности между RawInput(не рапознает правый левый) и хуком такк как прдположительно нужно менять исходную библиотеку.
+                if (key == VKeys.VK_LCONTROL || key == VKeys.VK_RCONTROL) // Заглушки из за разности между RawInput(не рапознает правый левый) и хуком, такк как прдположительно нужно менять исходную библиотеку.
                 {
                     chekKey = VKeys.VK_CONTROL;
                 }
@@ -239,7 +239,7 @@ namespace FVH.Background.Input
         //    return GetFunction();
         //});
 
-        public List<RegGroupFunction> ReturnGroupRegFunctions2() => GlobalList.ToList();
+        public List<RegGroupFunction> ReturnGroupRegFunctions() => GlobalList.ToList();
 
         //  public Task<bool> ContainsKeyComibantion(VKeys[] keyCombo) => Task.FromResult(FunctionsCallback.ContainsKey(keyCombo));
 

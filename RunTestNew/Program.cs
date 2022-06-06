@@ -13,7 +13,9 @@ namespace RunTestNew
         static async Task Main(string[] args)
         {
             using Input input = new Input();
-            ICallBack? callBack = await input.Subscribe();
+            ICallBack callBack = await input.Subscribe();
+            IHandler Handler = input.GetHandler();
+            
 
             Window1? window1 = null;
             Thread thread = new Thread(() =>
