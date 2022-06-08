@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net6.0-windows</TargetFramework>
+    <RootNamespace>Run_test</RootNamespace>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <UseWindowsForms>True</UseWindowsForms>
+    <UseWPF>True</UseWPF>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\BacgroundCallbackKit[0]\BacgroundCallbackSharpKit[0].csproj" />
+  </ItemGroup>
+
+</Project>

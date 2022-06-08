@@ -64,7 +64,7 @@ namespace FVH.Background.Input
         {
             VKeys[] pressedKeys = e.Keys;
             async Task<bool> InvokeOneKey(VKeys key)
-            {             
+            {
                 RegGroupFunction? qR = GlobalList.SingleOrDefault(x => x.KeyCombination.Length == 1 & x.KeyCombination[0] == key);
                 if (qR is null) return false;
                 else
@@ -79,23 +79,51 @@ namespace FVH.Background.Input
                 await InvokeOneKey(e.Keys[0]);
                 return;
             }
-
+            static IEnumerable<VKeys> GetDifference(IEnumerable<VKeys> a, IEnumerable<VKeys> b)
+            {
+                var res = new List<VKeys>(a);
+                b.ToList().ForEach(x => res.Remove(x));
+                return res;
+            }
             IEnumerable<RegGroupFunction> queryPrewiev = GlobalList.Where(x => x.KeyCombination.Length == pressedKeys.Length + 1).Where(x => x.KeyCombination.Except(pressedKeys).Count() == 1);
-
-            if (queryPrewiev.Any() is false) return;
-            else
-            {               
+            IEnumerable<RegGroupFunction> test = GlobalList.Where(x => x.KeyCombination.Length == pressedKeys.Length + 1);           
+            List<VKeys> myPreKeys = new List<VKeys>();
+            if (queryPrewiev.Any() is false)
+            {
+                if (test.Any() is false) return;
+                else
+                {
+                    foreach (RegGroupFunction x in test)
+                    {
+                        IEnumerable<VKeys> gyy = GetDifference(x.KeyCombination, pressedKeys);
+                        if (gyy.Count() == 1) myPreKeys.Add(gyy.ToArray()[0]);
+                    }
+                }
+            }
+            else if (queryPrewiev.Any() is true)
+            {
                 IEnumerable<VKeys> preKeysGroup = queryPrewiev.Select(x => x.KeyCombination.Except(pressedKeys)).ToArray().Select(x => x.ToArray()[0]);
 
                 VKeys? preKeyInput = await PreKeys(preKeysGroup);
 
-                if(preKeyInput.HasValue is false) return;
+                if (preKeyInput.HasValue is false) return;
                 else
                 {
                     RegGroupFunction invokeQuery = queryPrewiev.Single(x => x.KeyCombination.Intersect(new VKeys[] { preKeyInput.Value }).Count() == 1);
                     await InvokFunctions(invokeQuery.ListOfRegisteredFunctions);
                 }
-            }          
+            }
+            if (myPreKeys.Count == 0) return;
+            {
+                VKeys? preKeyInput2 = await PreKeys(myPreKeys);
+
+                if (preKeyInput2.HasValue is false) return;
+                else
+                {
+                    RegGroupFunction invokeQuery = test.Single(x => x.KeyCombination.Intersect(new VKeys[] { preKeyInput2.Value }).Count() == 1);
+                    await InvokFunctions(invokeQuery.ListOfRegisteredFunctions);
+                }
+            }
         }
 
         private Task InvokFunctions(IEnumerable<RegFunction> toTaskInvoke)
@@ -139,11 +167,11 @@ namespace FVH.Background.Input
                 {
                     chekKey = VKeys.VK_CONTROL;
                 }
-                else if(key == VKeys.VK_LMENU || key == VKeys.VK_RMENU)
+                else if (key == VKeys.VK_LMENU || key == VKeys.VK_RMENU)
                 {
                     chekKey = VKeys.VK_MENU;
                 }
-                else if(key == VKeys.VK_LSHIFT || key == VKeys.VK_RSHIFT)
+                else if (key == VKeys.VK_LSHIFT || key == VKeys.VK_RSHIFT)
                 {
                     chekKey = VKeys.VK_SHIFT;
                 }
@@ -152,7 +180,7 @@ namespace FVH.Background.Input
                     chekKey = key;
                 }
                 if (chekKey.HasValue is false) throw new InvalidOperationException();
-                bool res1 = keys.Contains(chekKey.Value); 
+                bool res1 = keys.Contains(chekKey.Value);
                 if (keys.Contains(chekKey.Value))
                 {
                     res = chekKey;
@@ -167,7 +195,7 @@ namespace FVH.Background.Input
                 }
             }
 
-            for (int i = 0; i < 20 ; i++)
+            for (int i = 0; i < 20; i++)
             {
                 if (ret is true) break;
                 await Task.Delay(1);
