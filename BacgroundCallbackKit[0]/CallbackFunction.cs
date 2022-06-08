@@ -81,35 +81,35 @@ namespace FVH.Background.Input
             }
             static IEnumerable<VKeys> GetDifference(IEnumerable<VKeys> a, IEnumerable<VKeys> b)
             {
-                var res = new List<VKeys>(a);
-                b.ToList().ForEach(x => res.Remove(x));
-                return res;
+                List<VKeys> difColection = new List<VKeys>(a);
+                b.ToList().ForEach(x => difColection.Remove(x));
+                return difColection;
             }
-            IEnumerable<RegGroupFunction> queryPrewiev = GlobalList.Where(x => x.KeyCombination.Length == pressedKeys.Length + 1).Where(x => x.KeyCombination.Except(pressedKeys).Count() == 1);
-            IEnumerable<RegGroupFunction> test = GlobalList.Where(x => x.KeyCombination.Length == pressedKeys.Length + 1);           
+            IEnumerable<RegGroupFunction> queryPrewievNotDuplicate = GlobalList.Where(x => x.KeyCombination.Length == pressedKeys.Length + 1).Where(x => x.KeyCombination.Except(pressedKeys).Count() == 1);
+            IEnumerable<RegGroupFunction> queryPrewievDuplicate = GlobalList.Where(x => x.KeyCombination.Length == pressedKeys.Length + 1);           
             List<VKeys> myPreKeys = new List<VKeys>();
-            if (queryPrewiev.Any() is false)
+            if (queryPrewievNotDuplicate.Any() is false)
             {
-                if (test.Any() is false) return;
+                if (queryPrewievDuplicate.Any() is false) return;
                 else
                 {
-                    foreach (RegGroupFunction x in test)
+                    foreach (RegGroupFunction x in queryPrewievDuplicate)
                     {
-                        IEnumerable<VKeys> gyy = GetDifference(x.KeyCombination, pressedKeys);
-                        if (gyy.Count() == 1) myPreKeys.Add(gyy.ToArray()[0]);
+                        IEnumerable<VKeys> resultDifference = GetDifference(x.KeyCombination, pressedKeys);
+                        if (resultDifference.Count() == 1) myPreKeys.Add(resultDifference.ToArray()[0]);
                     }
                 }
             }
-            else if (queryPrewiev.Any() is true)
+            else if (queryPrewievNotDuplicate.Any() is true)
             {
-                IEnumerable<VKeys> preKeysGroup = queryPrewiev.Select(x => x.KeyCombination.Except(pressedKeys)).ToArray().Select(x => x.ToArray()[0]);
+                IEnumerable<VKeys> preKeysGroup = queryPrewievNotDuplicate.Select(x => x.KeyCombination.Except(pressedKeys)).ToArray().Select(x => x.ToArray()[0]);
 
                 VKeys? preKeyInput = await PreKeys(preKeysGroup);
 
                 if (preKeyInput.HasValue is false) return;
                 else
                 {
-                    RegGroupFunction invokeQuery = queryPrewiev.Single(x => x.KeyCombination.Intersect(new VKeys[] { preKeyInput.Value }).Count() == 1);
+                    RegGroupFunction invokeQuery = queryPrewievNotDuplicate.Single(x => x.KeyCombination.Intersect(new VKeys[] { preKeyInput.Value }).Count() == 1);
                     await InvokFunctions(invokeQuery.ListOfRegisteredFunctions);
                 }
             }
@@ -120,7 +120,7 @@ namespace FVH.Background.Input
                 if (preKeyInput2.HasValue is false) return;
                 else
                 {
-                    RegGroupFunction invokeQuery = test.Single(x => x.KeyCombination.Intersect(new VKeys[] { preKeyInput2.Value }).Count() == 1);
+                    RegGroupFunction invokeQuery = queryPrewievDuplicate.Single(x => x.KeyCombination.Intersect(new VKeys[] { preKeyInput2.Value }).Count() == 1);
                     await InvokFunctions(invokeQuery.ListOfRegisteredFunctions);
                 }
             }

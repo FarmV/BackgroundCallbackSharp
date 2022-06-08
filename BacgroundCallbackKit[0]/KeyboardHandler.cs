@@ -18,20 +18,11 @@ namespace FVH.Background.Input
             Keys = keys;
         }
 
-        public VKeys[] Keys
-        {
-            get;
-        }
+        public VKeys[] Keys { get; }
     }
     internal class KeyboardHandler : IHandler
     {
-
-        //#region WinAPI
-        //const int MAPVK_VK_TO_VSC_EX = 4;
-
-        //[DllImport("user32.dll")]
-        //private static extern int MapVirtualKey(int uCode, int uMapType);
-        //#endregion
+        
         public List<VKeys> IsPressedKeys => _isPressedKeys.ToList();
 
         public event EventHandler<DataKeysNotificator>? KeyPressEvent;
@@ -46,22 +37,11 @@ namespace FVH.Background.Input
         List<(VKeys, RawKeyboardFlags)> test = new List<(VKeys, RawKeyboardFlags)>();
         public void Handler(RawInputData data)
         {
-            if (data is not RawInputKeyboardData keyboardData) return; //E1 это правая версия клавиши нажатие event, E0 её отпускание event
+            if (data is not RawInputKeyboardData keyboardData) return; //E1 это правая версия клавиши нажатие event, E0 её отпускание event. но не совсем...
 
             if (keyboardData.Keyboard.VirutalKey is 255) return; //todo Расмотреть возможность добавление обработки дополнительных клавиш (key 255)
 
             if (Enum.ToObject(typeof(VKeys), keyboardData.Keyboard.VirutalKey) is not VKeys FlagVkeys) throw new InvalidOperationException($"A virtual key is not an object {nameof(VKeys)}.");
-
-            //var VK_LCONTROL = 162;     /*Left CONTROL key*/
-            //var VK_RCONTROL = 163;
-
-            //var r1 = 42;
-            //var r2 = 54;
-            //if (keyboardData.Keyboard.Flags is RawKeyboardFlags.KeyE0 || keyboardData.Keyboard.Flags is RawKeyboardFlags.KeyE1)
-            //{
-            //    test.Add((FlagVkeys, keyboardData.Keyboard.Flags));
-            //    var r = MapVirtualKey(17, 4);
-            //}
 
             RawKeyboardFlags chekUPE0 = RawKeyboardFlags.Up | RawKeyboardFlags.KeyE0;
 
