@@ -20,13 +20,14 @@ namespace FVH.Background.Input
 
         public VKeys[] Keys { get; }
     }
-    internal class KeyboardHandler : IHandler
+    internal class DataHandler : IHandler
     {
         
         public List<VKeys> IsPressedKeys => _isPressedKeys.ToList();
 
         public event EventHandler<DataKeysNotificator>? KeyPressEvent;
         public event EventHandler<DataKeysNotificator>? KeyUpPressEvent;
+        public event EventHandler<RawInputMouseData>? MouseEvent;
 
         private readonly List<VKeys> _isPressedKeys = new List<VKeys>();
 
@@ -35,8 +36,9 @@ namespace FVH.Background.Input
       
 
         List<(VKeys, RawKeyboardFlags)> test = new List<(VKeys, RawKeyboardFlags)>();
-        public void Handler(RawInputData data)
+        public void HandlerKeyboard(RawInputKeyboardData data)
         {
+
             if (data is not RawInputKeyboardData keyboardData) return; //E1 это правая версия клавиши нажатие event, E0 её отпускание event. но не совсем...
 
             if (keyboardData.Keyboard.VirutalKey is 255) return; //todo Расмотреть возможность добавление обработки дополнительных клавиш (key 255)
@@ -65,7 +67,10 @@ namespace FVH.Background.Input
             throw new InvalidOperationException("Key Handler Error");
         }
 
-
+        public void HandlerMouse(RawInputMouseData data)
+        {
+            MouseEvent?.Invoke(this, data);
+        }
     }
 
 }

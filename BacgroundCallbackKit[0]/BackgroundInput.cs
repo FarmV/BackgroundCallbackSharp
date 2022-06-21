@@ -9,7 +9,7 @@ using System.Windows;
 using System.Windows.Interop;
 using System.Windows.Threading;
 
-using static FVH.Background.Input.KeyboardHandler;
+using static FVH.Background.Input.DataHandler;
 
 namespace FVH.Background.InputHandler
 {
@@ -21,7 +21,7 @@ namespace FVH.Background.InputHandler
         public void Dispose()
         {
             if (isDispose is true) return;
-            
+
             ProxyInputHandlerWindow?.Dispatcher?.InvokeShutdown();
             _lowLevlHook?.Dispose();
             isDispose = true;
@@ -41,15 +41,18 @@ namespace FVH.Background.InputHandler
 
 
         private bool isItialized = false;
-        private readonly Action<RawInputData> _callbackEvent;
+        private readonly Action<RawInputKeyboardData> _callbackEventKeyboardData;
+       private readonly Action<RawInputMouseData> _callbackEventMouseData;
         private readonly IHandler _keyboardHandler;
         private LowLevlHook? _lowLevlHook;
         private CallbackFunction? _callbackFunction;
 
         public Input()
         {
-            _keyboardHandler = new KeyboardHandler();
-            _callbackEvent = new Action<RawInputData>((x) => _keyboardHandler.Handler(x));
+            _keyboardHandler = new DataHandler();
+            _callbackEventKeyboardData = new Action<RawInputKeyboardData>((x) => _keyboardHandler.HandlerKeyboard(x));
+            _callbackEventMouseData = new Action<RawInputMouseData>((x) => _keyboardHandler.HandlerMouse(x));
+
         }
 
         public async Task<ICallBack> Subscribe()
@@ -93,7 +96,17 @@ namespace FVH.Background.InputHandler
                         case WM_INPUT:
                             {
                                 RawInputData data = RawInputData.FromHandle(lParam);
-                                _callbackEvent.Invoke(data);
+                                if (data is RawInputKeyboardData keyboardData)
+                                {
+                                    _callbackEventKeyboardData.Invoke(keyboardData);
+                                }
+                                else
+                                {
+                                    if(data is RawInputMouseData mouseData)
+                                    {
+                                        _callbackEventMouseData.Invoke(mouseData);
+                                    }
+                                }
                             }
                             break;
                     }
@@ -115,7 +128,7 @@ namespace FVH.Background.InputHandler
 
 
 
-    public class ExtensionInput 
+    public class ExtensionInput
     {
         private bool isItialized = false;
         public Task<HwndSource> GetOneInstanceProxyWindow()
@@ -144,7 +157,7 @@ namespace FVH.Background.InputHandler
         }
     }
 
-    public interface ICallBack 
+    public interface ICallBack
     {
         public Task AddCallBackTask(VKeys[] keyCombo, Func<Task> callbackTask, object? identifier = null);
         public Task<bool> DeleteATaskByAnIdentifier(object? identifier = null);
@@ -156,7 +169,9 @@ namespace FVH.Background.InputHandler
         public List<VKeys> IsPressedKeys { get; }
         public event EventHandler<DataKeysNotificator>? KeyPressEvent;
         public event EventHandler<DataKeysNotificator>? KeyUpPressEvent;
-        internal void Handler(RawInputData data);
+        public event EventHandler<RawInputMouseData>? MouseEvent;
+        internal void HandlerKeyboard(RawInputKeyboardData data);
+        internal void HandlerMouse(RawInputMouseData data);
     }
 
 
