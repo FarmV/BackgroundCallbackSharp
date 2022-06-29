@@ -7,6 +7,13 @@
     <Nullable>enable</Nullable>
     <OutputType>Library</OutputType>
     <UseWPF>True</UseWPF>
+
+
+	 <AssemblyVersion>0.0.1.0</AssemblyVersion>
+	  <PackageVersion>0.0.1</PackageVersion>
+
+
+
   </PropertyGroup>
 
   <ItemGroup>

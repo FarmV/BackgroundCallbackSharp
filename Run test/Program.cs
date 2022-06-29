@@ -5,41 +5,53 @@ using FVH.Background;
 using System.Reflection;
 using System.IO.Packaging;
 using System.IO;
+using static FVH.Background.Notificator;
+using System.Windows.Threading;
+
 
 namespace Run_test
 {
     internal class Program
     {
+        static Notificator? _notificator;
+        class MyNotiWindow : WindowHideAltTab
+        {
+            public MyNotiWindow()
+            {
+                this.Content = new System.Windows.Controls.Button() { Name = "Exit", Content = "Exit", FontSize = 72 };
+                this.Topmost = true;
+                this.WindowStyle = WindowStyle.None;
+                this.SizeToContent = SizeToContent.WidthAndHeight;
+                this.ResizeMode = ResizeMode.NoResize;
+                System.Windows.Controls.Button button = (System.Windows.Controls.Button)this.Content;
+                button.Click += (x, y) =>
+                {
+
+                    _notificator?.Dispose();
+                    //System.Windows.Application.Current.Dispatcher.Invoke(() =>
+                    
+                    //     System.Windows.Application.Current.Shutdown();
+                        
+                    //});
+
+                    System.Windows.Forms.Application.Exit();
+                    Environment.Exit(0);
+                };
+            }
+        }
 
         static async Task Main()
         {
-           // _ = System.IO.Packaging.PackUriHelper.UriSchemePack; // UriHelper.GetUriApp заглушка лечние
-            //  if (UriParser.IsKnownScheme("pack") is not true) _ = new System.Windows.Application();
-           
+            //  if (UriParser.IsKnownScheme("pack") is not true);
+            _ = System.IO.Packaging.PackUriHelper.UriSchemePack; // UriHelper.GetUriApp заглушка лечние
+
             using Input input = new Input();
             ICallBack iCallBack = await input.Subscribe();
-            await iCallBack.AddCallBackTask(new VKeys[] { VKeys.VK_SHIFT, VKeys.VK_CONTROL, VKeys.VK_CONTROL },
-                () => new Task(() =>
-                {
-                    Thread thread = new Thread(() =>
-                    {
-                        Test1 test = new Test1();
-                        test.Notificator = new Notificator();
+            await iCallBack.AddCallBackTask(new VKeys[] { VKeys.VK_SHIFT,VKeys.VK_KEY_A, VKeys.VK_KEY_A },
+                () => new Task(() => System.Windows.MessageBox.Show("Ok") ));
+              
 
-                    });
-                    thread.SetApartmentState(ApartmentState.STA);
-                    thread.Start();
-                    System.Windows.MessageBox.Show("ok");
-                }));
 
-            //Thread thread = new Thread(() =>
-            //{
-            //    Window window = new Window();
-            //    window.Show();
-            //    Uri r1 = UriHelper.GetUriApp(@"Resources\Icon2Test.dll");
-            //});
-            //thread.SetApartmentState(ApartmentState.STA);
-            //thread.Start();
 
             Console.WriteLine();
 
@@ -47,10 +59,7 @@ namespace Run_test
 
             Environment.Exit(0);
         }
-        internal class Test1
-        {
-            internal Notificator? Notificator;
-        }
+
         internal static class UriHelper
         {
             internal static Uri GetUriApp(string resourcePath) => new Uri(string.Format("pack://application:,,,/{0};component/{1}", Assembly.GetExecutingAssembly().GetName().Name, resourcePath));
