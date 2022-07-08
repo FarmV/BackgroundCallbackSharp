@@ -257,7 +257,7 @@ namespace FVH.Background.Input
 
         public Task<bool> ContainsKeyComibantion(VKeys[] keyCombo) => Task.FromResult(GlobalList.SingleOrDefault(x => x.KeyCombination == keyCombo) is not null);
 
-
+        public Task<IHandler> GetHandler() => _keyboardHandler is not null ? Task.FromResult<IHandler>(_keyboardHandler) : Task.FromException<IHandler>(new NullReferenceException(nameof(_keyboardHandler)));
     }
 
 }

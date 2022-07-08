@@ -42,7 +42,7 @@ namespace FVH.Background.InputHandler
 
         private bool isItialized = false;
         private readonly Action<RawInputKeyboardData> _callbackEventKeyboardData;
-       private readonly Action<RawInputMouseData> _callbackEventMouseData;
+        private readonly Action<RawInputMouseData> _callbackEventMouseData;
         private readonly IHandler _keyboardHandler;
         private LowLevlHook? _lowLevlHook;
         private CallbackFunction? _callbackFunction;
@@ -57,7 +57,10 @@ namespace FVH.Background.InputHandler
 
         public async Task<ICallBack> Subscribe()
         {
-            if (isItialized is true) throw new InvalidOperationException("You cannot reinitialize the same class instance");
+
+            if (isItialized is true) return _callbackFunction is not null ? _callbackFunction : throw new NullReferenceException($"{nameof(_callbackFunction)} cannot be null");
+          
+
             EventWaitHandle WaitHandleStartWindow = new EventWaitHandle(false, EventResetMode.ManualReset);
 
 
@@ -95,17 +98,19 @@ namespace FVH.Background.InputHandler
                     {
                         case WM_INPUT:
                             {
-                                RawInputData data = RawInputData.FromHandle(lParam);
-                                if (data is RawInputKeyboardData keyboardData)
+                                if (RawInputData.FromHandle(lParam) is RawInputData data)
                                 {
-                                    _callbackEventKeyboardData.Invoke(keyboardData);
-                                }
-                                else
-                                {
-                                    if(data is RawInputMouseData mouseData)
+                                    switch (data)
                                     {
-                                        _callbackEventMouseData.Invoke(mouseData);
+                                        case RawInputKeyboardData keyboardData:
+                                            _callbackEventKeyboardData.Invoke(keyboardData);
+                                            break;
+
+                                        case RawInputMouseData mouseData:
+                                            _callbackEventMouseData.Invoke(mouseData);
+                                            break;                                     
                                     }
+
                                 }
                             }
                             break;
@@ -122,8 +127,7 @@ namespace FVH.Background.InputHandler
             WaitHandleStartWindow.Dispose();
             return _callbackFunction is not null ? _callbackFunction : throw new NullReferenceException($"{nameof(_callbackFunction)} cannot be null");
         }
-        public IHandler GetHandler() => _keyboardHandler;
-
+       
     }
 
 
@@ -163,6 +167,7 @@ namespace FVH.Background.InputHandler
         public Task<bool> DeleteATaskByAnIdentifier(object? identifier = null);
         public Task<bool> ContainsKeyComibantion(VKeys[] keyCombo);
         public List<RegGroupFunction> ReturnGroupRegFunctions();
+        public Task<IHandler> GetHandler();
     }
     public interface IHandler
     {
