@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 
 namespace FVH.Background.Input
 {
+    
     public enum VKeys
     {
         //https://docs.microsoft.com/en-us/windows/win32/inputdev/virtual-key-codes

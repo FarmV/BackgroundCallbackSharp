@@ -7,9 +7,6 @@ using System.Windows.Threading;
 
 
 
-
-
-
 namespace Run_test
 {
     internal static class ConstApp
@@ -22,11 +19,13 @@ namespace Run_test
       
         static async Task Main(string[] args)
         {
+       
             AppDomain.CurrentDomain.SetData(ConstApp.Input, Task.Run(() => new Input()));
 
             Thread helperThread = new Thread(() =>
             {
                 Thread.CurrentThread.Name = "HelperThread";
+               
                 Dispatcher.Run();
             });
             helperThread.SetApartmentState(ApartmentState.STA);
@@ -34,6 +33,7 @@ namespace Run_test
             Thread winThread = new Thread(() =>
             {
                 Thread.CurrentThread.Name = "WinThread";
+               
                 Dispatcher.Run();
             });
 
@@ -46,19 +46,42 @@ namespace Run_test
             while (winDispatcher is null || helperDispatcher is null)
             {
                 winDispatcher = Dispatcher.FromThread(winThread);
-                helperDispatcher = Dispatcher.FromThread(helperThread);
+                helperDispatcher = Dispatcher.FromThread(helperThread);                
+            }
+            
+            bool TimeoutInitDispathcer = false;
+            System.Threading.Timer Timer = new System.Threading.Timer((_) => TimeoutInitDispathcer = true);
+            Timer.Change(TimeSpan.FromSeconds(3), Timeout.InfiniteTimeSpan);
+
+            while (true)
+            {
+                try
+                {
+                    if (TimeoutInitDispathcer is true) throw new InvalidOperationException(nameof(TimeoutInitDispathcer));
+                    Task taskHelperInit = await helperDispatcher.InvokeAsync(async() => await Task.Delay(1)).Task;
+                    Task taskWinInit = await winDispatcher.InvokeAsync(async () => await Task.Delay(1)).Task;
+                    Parallel.Invoke(() => taskHelperInit.Wait(),()=> taskWinInit.Wait());
+                    Timer.Dispose();
+                    break;
+                }
+                catch (System.Threading.Tasks.TaskCanceledException) { }
             }
 
-            await Task.Delay(TimeSpan.FromSeconds(8));
+            //await Task.Delay(TimeSpan.FromSeconds(8));
 
-            AppDomain.CurrentDomain.SetData(ConstApp.Shutdown, new Task(() =>
+
+
+
+            AppDomain.CurrentDomain.SetData(ConstApp.Shutdown, new Task(() => 
             {
                 Parallel.Invoke(async () => await winDispatcher.InvokeAsync(() => winDispatcher.InvokeShutdown()),
                                 async () => await helperDispatcher.InvokeAsync(() => helperDispatcher.InvokeShutdown()));
                 Environment.Exit(0);
             }));
 
-            Task addCallBackFromHelepr = await helperDispatcher.InvokeAsync(async () =>
+           
+
+            Task addCallBackFromHelepr = await helperDispatcher.InvokeAsync(async () => 
             {               
                  if (AppDomain.CurrentDomain.GetData(ConstApp.Input) is not Task<Input> input) throw new InvalidOperationException(nameof(input));
 
