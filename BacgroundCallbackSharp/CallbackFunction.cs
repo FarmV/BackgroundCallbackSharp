@@ -132,18 +132,8 @@ namespace FVH.Background.Input
 
             Parallel.Invoke(toTaskInvoke.Select(x => new Action(() =>
             {
-                try
-                {
-                    x.CallBackTask.Invoke().Start();
-                }
-                catch (InvalidOperationException)
-                {
-                    throw;
-                }
-                catch (Exception)
-                {
-
-                }
+                try { x.CallBackTask.Invoke().Start(); }
+                catch (Exception) { }
             })).ToArray());
 
             return Task.CompletedTask;
