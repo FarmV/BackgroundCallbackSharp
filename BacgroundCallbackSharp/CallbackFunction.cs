@@ -69,7 +69,7 @@ namespace FVH.Background.Input
                 if (qR is null) return false;
                 else
                 {
-                    await InvokFunctions(qR.ListOfRegisteredFunctions);
+                    await InvokeFunctions(qR.ListOfRegisteredFunctions);
                     return true;
                 }
             }
@@ -110,10 +110,10 @@ namespace FVH.Background.Input
                 else
                 {
                     RegGroupFunction invokeQuery = queryPrewievNotDuplicate.Single(x => x.KeyCombination.Intersect(new VKeys[] { preKeyInput.Value }).Count() == 1);
-                    await InvokFunctions(invokeQuery.ListOfRegisteredFunctions);
+                    await InvokeFunctions(invokeQuery.ListOfRegisteredFunctions);
                 }
             }
-            if (myPreKeys.Count == 0) return;
+            if (myPreKeys.Count is 0) return;
             {
                 VKeys? preKeyInput2 = await PreKeys(myPreKeys);
 
@@ -121,12 +121,12 @@ namespace FVH.Background.Input
                 else
                 {
                     RegGroupFunction invokeQuery = queryPrewievDuplicate.Single(x => x.KeyCombination.Intersect(new VKeys[] { preKeyInput2.Value }).Count() == 1);
-                    await InvokFunctions(invokeQuery.ListOfRegisteredFunctions);
+                    await InvokeFunctions(invokeQuery.ListOfRegisteredFunctions);
                 }
             }
         }
 
-        private Task InvokFunctions(IEnumerable<RegFunction> toTaskInvoke)
+        private Task InvokeFunctions(IEnumerable<RegFunction> toTaskInvoke) //todo порверить и возможно перерабоать логику обработки исключений
         {
             if (toTaskInvoke.Any() is false) throw new InvalidOperationException("The collection cannot be empty");
 

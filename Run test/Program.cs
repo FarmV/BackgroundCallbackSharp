@@ -66,12 +66,7 @@ namespace Run_test
                 }
                 catch (System.Threading.Tasks.TaskCanceledException) { }
             }
-
-            //await Task.Delay(TimeSpan.FromSeconds(8));
-
-
-
-
+         
             AppDomain.CurrentDomain.SetData(ConstApp.Shutdown, new Task(() => 
             {
                 Parallel.Invoke(async () => await winDispatcher.InvokeAsync(() => winDispatcher.InvokeShutdown()),
