@@ -151,15 +151,15 @@ namespace FVH.Background.Input
             {
                 if (_lowlevlhook is null) throw new NullReferenceException(nameof(LowLevlHook));
                 VKeys? chekKey = null;
-                if (key == VKeys.VK_LCONTROL || key == VKeys.VK_RCONTROL) // Заглушки из за разности между RawInput(не рапознает правый левый) и хуком, так как прдположительно нужно менять исходную библиотеку.
+                if (key is VKeys.VK_LCONTROL || key is VKeys.VK_RCONTROL) // Заглушки из за разности между RawInput(не рапознает правый левый) и хуком, так как прдположительно нужно менять исходную библиотеку.
                 {
                     chekKey = VKeys.VK_CONTROL;
                 }
-                else if (key == VKeys.VK_LMENU || key == VKeys.VK_RMENU)
+                else if (key is VKeys.VK_LMENU || key is VKeys.VK_RMENU)
                 {
                     chekKey = VKeys.VK_MENU;
                 }
-                else if (key == VKeys.VK_LSHIFT || key == VKeys.VK_RSHIFT)
+                else if (key is VKeys.VK_LSHIFT || key is VKeys.VK_RSHIFT)
                 {
                     chekKey = VKeys.VK_SHIFT;
                 }
