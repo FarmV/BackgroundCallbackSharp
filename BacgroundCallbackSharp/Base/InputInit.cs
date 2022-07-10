@@ -242,6 +242,11 @@ namespace FVH.Background.Input
         public event EventHandler<DataKeysNotificator>? KeyUpPressEvent;
     }
 
+    public interface IMouseHandlerBase
+    {
+        internal void HandlerMouse(RawInputMouseData data);
+    }
+
 
 
 }
