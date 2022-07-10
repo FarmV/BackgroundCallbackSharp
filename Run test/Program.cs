@@ -20,7 +20,7 @@ namespace Run_test
 
         static async Task Main(string[] args)
         {
-            var r = new Input();
+            using Input? r = new Input();
             ICallBack callBackr = await r.Subscribe();
             IHandler handler = await callBackr.GetHandler();
 

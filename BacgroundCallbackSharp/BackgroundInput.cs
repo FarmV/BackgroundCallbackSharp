@@ -22,7 +22,7 @@ namespace FVH.Background.InputHandler
     ///<code Language ="cs">  
     ///<a>Example:</a>
     ///<br>
-    ///<see cref="Input"/> <paramref name="input"/> = <see langword="new"/>();
+    ///<see langword="using"/> <see cref="Input"/> <paramref name="input"/> = <see langword="new"/>();
     ///</br>
     ///<br>
     ///<see cref="ICallBack"/> <paramref name="input"/> = <see langword="await"/> <paramref name="input"/>.Subscribe();
@@ -211,7 +211,7 @@ namespace FVH.Background.InputHandler
     ///<code Language ="cs">  
     ///<a>Example:</a>
     ///<br>
-    ///<see cref="Input"/> <paramref name="input"/> = <see langword="new"/>();
+    ///<see langword="using"/> <see cref="Input"/> <paramref name="input"/> = <see langword="new"/>();
     ///</br>
     ///<br>
     ///<see cref="ICallBack"/> <paramref name="input"/> = <see langword="await"/> <paramref name="input"/>.Subscribe();
