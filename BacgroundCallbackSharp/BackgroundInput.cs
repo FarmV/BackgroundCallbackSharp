@@ -8,11 +8,27 @@ using System.Security.Policy;
 using System.Windows;
 using System.Windows.Interop;
 using System.Windows.Threading;
+using System.Xml.Linq;
 
 using static FVH.Background.Input.DataHandler;
 
 namespace FVH.Background.InputHandler
 {
+    /// <summary>
+    /// <br><see langword="En"/></br>
+    ///<br/>The class creates a proxy <see cref="HwndSource"/>. Registers it to receive mouse and keyboard events. Creates classes to handle events.
+    ///<br><see langword="Ru"/></br>
+    ///<br>Класс создает прокси-источник HwndSource. Регистрирует его для получения событий мыши и клавиатуры. Создает классы для обработки событий.</br>
+    ///<code Language ="cs">  
+    ///<a>Example:</a>
+    ///<br>
+    ///<see cref="Input"/> <paramref name="input"/> = <see langword="new"/>();
+    ///</br>
+    ///<br>
+    ///<see cref="ICallBack"/> <paramref name="input"/> = <see langword="await"/> <paramref name="input"/>.Subscribe();
+    ///</br>
+    ///</code>    
+    ///</summary>
     public class Input : IDisposable
     {
         private volatile HwndSource? ProxyInputHandlerWindow;
@@ -59,7 +75,7 @@ namespace FVH.Background.InputHandler
         {
 
             if (isItialized is true) return _callbackFunction is not null ? _callbackFunction : throw new NullReferenceException($"{nameof(_callbackFunction)} cannot be null");
-          
+
 
             EventWaitHandle WaitHandleStartWindow = new EventWaitHandle(false, EventResetMode.ManualReset);
 
@@ -108,7 +124,7 @@ namespace FVH.Background.InputHandler
 
                                         case RawInputMouseData mouseData:
                                             _callbackEventMouseData.Invoke(mouseData);
-                                            break;                                     
+                                            break;
                                     }
 
                                 }
@@ -127,7 +143,7 @@ namespace FVH.Background.InputHandler
             WaitHandleStartWindow.Dispose();
             return _callbackFunction is not null ? _callbackFunction : throw new NullReferenceException($"{nameof(_callbackFunction)} cannot be null");
         }
-       
+
     }
 
 
@@ -161,6 +177,24 @@ namespace FVH.Background.InputHandler
         }
     }
 
+
+
+    /// <summary>
+    /// <br><see langword="En"/></br>
+    ///<br/>This interface declares a contract for the keyboard input registration class. 
+    ///<br><see langword="Ru"/></br>
+    ///<br>Этот интерфейс объявляет контракт для класса регистрации ввода с клавиатуры.</br>
+    ///<code Language ="cs">  
+    ///<a>Example:</a>
+    ///<br>
+    ///<see cref="Input"/> <paramref name="input"/> = <see langword="new"/>();
+    ///</br>
+    ///<br>
+    ///<see cref="ICallBack"/> <paramref name="input"/> = <see langword="await"/> <paramref name="input"/>.Subscribe();
+    ///</br>
+    ///</code>    
+    ///</summary>
+
     public interface ICallBack
     {
         public Task AddCallBackTask(VKeys[] keyCombo, Func<Task> callbackTask, object? identifier = null);
@@ -169,6 +203,24 @@ namespace FVH.Background.InputHandler
         public List<RegGroupFunction> ReturnGroupRegFunctions();
         public Task<IHandler> GetHandler();
     }
+    /// <summary>
+    /// <br><see langword="En"/></br>
+    ///<br/>This interface declares a contract for the keyboard and mouse event handler class. 
+    ///<br><see langword="Ru"/></br>
+    ///<br>Этот интерфейс объявляет контракт для класса обработчика событий клавиатуры и мыши.</br>
+    ///<code Language ="cs">  
+    ///<a>Example:</a>
+    ///<br>
+    ///<see cref="Input"/> <paramref name="input"/> = <see langword="new"/>();
+    ///</br>
+    ///<br>
+    ///<see cref="ICallBack"/> <paramref name="input"/> = <see langword="await"/> <paramref name="input"/>.Subscribe();
+    ///</br>
+    ///<br>
+    ///<see cref="IHandler"/> <paramref name="handler"/> = <see langword="await"/> <paramref name="handler"/>.GetHandler(); 
+    ///</br>
+    ///</code>    
+    ///</summary>
     public interface IHandler
     {
         public List<VKeys> IsPressedKeys { get; }

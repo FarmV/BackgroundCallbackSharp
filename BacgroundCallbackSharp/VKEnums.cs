@@ -1,17 +1,29 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Policy;
 using System.Text;
 using System.Threading.Tasks;
 
+using static System.Net.WebRequestMethods;
+
 namespace FVH.Background.Input
 {
-    
-    public enum VKeys
-    {
-        //https://docs.microsoft.com/en-us/windows/win32/inputdev/virtual-key-codes
 
-        // Constant                Value               Description
+
+
+
+
+    /// <summary>
+    ///     <br/>Virtual key codes <see cref="VKeys"/>
+    ///     <br/>
+    ///     <br/>
+    ///     <see href="https://docs.microsoft.com/en-us/windows/win32/inputdev/virtual-key-codes">docs.microsoft.com</see>  
+    /// </summary>
+    public enum VKeys
+    {      
+        // Constant = Value        Description
+
         VK_LBUTTON = 0x01,         /* Left mouse button*/
         VK_RBUTTON = 0x02,         /* Right mouse button*/
         VK_CANCEL = 0x03,          /* Control-break processing*/
