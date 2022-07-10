@@ -1,5 +1,5 @@
 ﻿using FVH.Background.Input;
-using FVH.Background.InputHandler;
+
 
 using System.Threading.Tasks;
 using System.Windows.Controls;
@@ -20,9 +20,6 @@ namespace Run_test
 
         static async Task Main(string[] args)
         {
-            using Input? r = new Input();
-            ICallBack callBackr = await r.Subscribe();
-            IHandler handler = await callBackr.GetHandler();
 
             AppDomain.CurrentDomain.SetData(ConstApp.Input, Task.Run(() => new Input()));
 

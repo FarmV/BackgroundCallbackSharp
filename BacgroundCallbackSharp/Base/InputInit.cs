@@ -12,7 +12,7 @@ using System.Xml.Linq;
 
 using static FVH.Background.Input.DataHandler;
 
-namespace FVH.Background.InputHandler
+namespace FVH.Background.Input
 {
     /// <summary>
     /// <br><see langword="En"/></br>
@@ -221,9 +221,9 @@ namespace FVH.Background.InputHandler
     ///</br>
     ///</code>    
     ///</summary>
-    public interface IHandler
+    public interface IHandler //todo добавить интерфейс для мыши этот оставить для клавиатуры
     {
-        public List<VKeys> IsPressedKeys { get; }
+        public List<VKeys> PressedKeys { get; }
         public event EventHandler<DataKeysNotificator>? KeyPressEvent;
         public event EventHandler<DataKeysNotificator>? KeyUpPressEvent;
         public event EventHandler<RawInputMouseData>? MouseEvent;
@@ -231,6 +231,16 @@ namespace FVH.Background.InputHandler
         internal void HandlerMouse(RawInputMouseData data);
     }
 
+    public interface IKeyboardHandlerBase
+    {
+        internal void HandlerKeyboard(RawInputKeyboardData data);
+    }
+    public interface IKeyboardHandler : IKeyboardHandlerBase
+    {
+        public List<VKeys> PressedKeys { get; }
+        public event EventHandler<DataKeysNotificator>? KeyPressEvent;
+        public event EventHandler<DataKeysNotificator>? KeyUpPressEvent;
+    }
 
 
 

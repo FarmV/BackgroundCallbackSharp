@@ -6,8 +6,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using FVH.Background.InputHandler;
 using System.Runtime.InteropServices;
+using FVH.Background.Input;
 
 namespace FVH.Background.Input
 {
@@ -23,7 +23,7 @@ namespace FVH.Background.Input
     internal class DataHandler : IHandler
     {
         
-        public List<VKeys> IsPressedKeys => _isPressedKeys.ToList();
+        public List<VKeys> PressedKeys => _isPressedKeys.ToList();
 
         public event EventHandler<DataKeysNotificator>? KeyPressEvent;
         public event EventHandler<DataKeysNotificator>? KeyUpPressEvent;
@@ -60,7 +60,7 @@ namespace FVH.Background.Input
                 {
                     if (_isPressedKeys.Contains(FlagVkeys) is not true) return;
                     _isPressedKeys.Remove(FlagVkeys);
-                    KeyUpPressEvent?.Invoke(null, new DataKeysNotificator(IsPressedKeys.ToArray()));
+                    KeyUpPressEvent?.Invoke(null, new DataKeysNotificator(PressedKeys.ToArray()));
                     return;
                 }
             }
