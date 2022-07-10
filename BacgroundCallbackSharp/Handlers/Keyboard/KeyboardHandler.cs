@@ -27,7 +27,6 @@ namespace FVH.Background.Input
 
         public event EventHandler<DataKeysNotificator>? KeyPressEvent;
         public event EventHandler<DataKeysNotificator>? KeyUpPressEvent;
-        public event EventHandler<RawInputMouseData>? MouseEvent;
 
         private readonly List<VKeys> _isPressedKeys = new List<VKeys>();
 
@@ -65,11 +64,6 @@ namespace FVH.Background.Input
                 }
             }
             throw new InvalidOperationException("Key Handler Error");
-        }
-
-        public void HandlerMouse(RawInputMouseData data)
-        {
-            MouseEvent?.Invoke(this, data);
         }
     }
 

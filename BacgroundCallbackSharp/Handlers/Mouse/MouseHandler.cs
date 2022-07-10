@@ -12,9 +12,10 @@ namespace FVH.Background.Input
 {
     internal class MouseHandler : IMouseHandlerBase
     {
-       public void HandlerMouse(RawInputMouseData data)
-       {
-            throw new NotImplementedException();
-       }
+        public event EventHandler<RawInputMouseData>? MouseEvent;
+        public void HandlerMouse(RawInputMouseData data)
+        {
+            MouseEvent?.Invoke(this, data);
+        }
     }
 }

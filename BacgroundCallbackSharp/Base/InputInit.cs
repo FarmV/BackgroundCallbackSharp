@@ -63,12 +63,15 @@ namespace FVH.Background.Input
         private LowLevlHook? _lowLevlHook;
         private CallbackFunction? _callbackFunction;
 
+        private IMouseHandlerBase _mouseHandler;
+
+
         public Input()
         {
             _keyboardHandler = new DataHandler();
+            _mouseHandler = new MouseHandler();
             _callbackEventKeyboardData = new Action<RawInputKeyboardData>((x) => _keyboardHandler.HandlerKeyboard(x));
-            _callbackEventMouseData = new Action<RawInputMouseData>((x) => _keyboardHandler.HandlerMouse(x));
-
+            _callbackEventMouseData = new Action<RawInputMouseData>((x) => _mouseHandler.HandlerMouse(x));
         }
 
         public async Task<ICallBack> Subscribe()
@@ -228,9 +231,18 @@ namespace FVH.Background.Input
         public event EventHandler<DataKeysNotificator>? KeyUpPressEvent;
         public event EventHandler<RawInputMouseData>? MouseEvent;
         internal void HandlerKeyboard(RawInputKeyboardData data);
-        internal void HandlerMouse(RawInputMouseData data);
     }
 
+
+
+
+
+
+
+
+
+
+    //not Work
     public interface IKeyboardHandlerBase
     {
         internal void HandlerKeyboard(RawInputKeyboardData data);
