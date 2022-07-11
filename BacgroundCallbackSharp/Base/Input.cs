@@ -67,7 +67,7 @@ namespace FVH.Background.Input
 
         public Task<IKeyboardHandler> GetKeyboardHandler() => Task.FromResult(_keyboardHandler);
         public Task<IMouseHandler> GetMouseHandler() => Task.FromResult(_mouseHandler);
-        public Task<IKeyboardCallBack> GetCallbackFunction() => Task.FromResult(_callbackFunction is IKeyboardCallBack CallBack ? CallBack : throw new NullReferenceException(nameof(_callbackFunction)));
+        public Task<IKeyboardCallBack> GetKeyboardCallbackFunction() => Task.FromResult(_callbackFunction is IKeyboardCallBack CallBack ? CallBack : throw new NullReferenceException(nameof(_callbackFunction)));
 
 
         public Input() : this(null, null) { }
@@ -129,12 +129,12 @@ namespace FVH.Background.Input
                 }
             });
 
-            Task subscribeWindowtoRawInput = new Task(async () =>
+            Task subscribeWindowtoRawInput = new Task( () =>
             {
                 if (ProxyInputHandlerWindow is null) throw new NullReferenceException("The window could not initialize");
 
-                await ProxyInputHandlerWindow.Dispatcher.InvokeAsync(() =>
-                {
+                 ProxyInputHandlerWindow.Dispatcher.Invoke(() => // синхронно?
+                 {
                     RawInputDeviceRegistration[] devices =
                     {
                          new RawInputDeviceRegistration(HidUsageAndPage.Mouse, RawInputDeviceFlags.InputSink, ProxyInputHandlerWindow.Handle),
