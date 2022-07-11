@@ -11,30 +11,33 @@ using FVH.Background.Input;
 
 namespace FVH.Background.Input
 {
-    public class DataKeysNotificator 
+
+
+    public interface IKeysNotificator
     {
-        public DataKeysNotificator(VKeys[] keys)
-        {
-            Keys = keys;
-        }
+        VKeys[] Keys { get; }
+    }
+
+    public class DataKeysNotificator : IKeysNotificator
+    {
+        public DataKeysNotificator(VKeys[] keys) { Keys = keys; }
 
         public VKeys[] Keys { get; }
     }
-    internal class DataHandler : IHandler
+    internal class KeyboardHandler : IKeyboardHandler
     {
-        
+
+
+
         public List<VKeys> PressedKeys => _isPressedKeys.ToList();
-
-        public event EventHandler<DataKeysNotificator>? KeyPressEvent;
-        public event EventHandler<DataKeysNotificator>? KeyUpPressEvent;
-
         private readonly List<VKeys> _isPressedKeys = new List<VKeys>();
 
+        public event EventHandler<IKeysNotificator>? KeyPressEvent;
+        public event EventHandler<IKeysNotificator>? KeyUpPressEvent;
 
-        private readonly object _lockObject = new object();
-      
 
-        List<(VKeys, RawKeyboardFlags)> test = new List<(VKeys, RawKeyboardFlags)>();
+
+        private readonly object _lockObject = new object();     
         public void HandlerKeyboard(RawInputKeyboardData data)
         {
 

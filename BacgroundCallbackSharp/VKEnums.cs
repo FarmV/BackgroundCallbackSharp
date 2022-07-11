@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Security.Policy;
 using System.Text;
@@ -9,9 +10,19 @@ using static System.Net.WebRequestMethods;
 
 namespace FVH.Background.Input
 {
-
-
-
+    internal class VKeysEqualityComparer : IEqualityComparer<VKeys[]>
+    {
+        public bool Equals(VKeys[]? x, VKeys[]? y)
+        {
+            if (x is null || y is null) return false;
+            if (x.Length is 0 || y.Length is 0) return false;
+            if (x.Length != y.Length) return false;
+            if (x.SequenceEqual(y)) return true;
+            if (x.Intersect(y).Count() == x.Length) return true;
+            return false;
+        }
+        public int GetHashCode([DisallowNull] VKeys[] obj) => 0;
+    }
 
 
     /// <summary>

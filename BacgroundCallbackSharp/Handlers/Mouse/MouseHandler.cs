@@ -10,7 +10,7 @@ using System.Threading.Tasks;
 
 namespace FVH.Background.Input
 {
-    internal class MouseHandler : IMouseHandlerBase
+    internal class MouseHandler : IMouseHandler
     {
         public event EventHandler<RawInputMouseData>? MouseEvent;
         public void HandlerMouse(RawInputMouseData data)

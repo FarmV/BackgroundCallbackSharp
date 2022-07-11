@@ -20,8 +20,4 @@
     <PackageReference Include="RawInput.Sharp" Version="0.0.4" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="Base\Interfaces\" />
-  </ItemGroup>
-
 </Project>
