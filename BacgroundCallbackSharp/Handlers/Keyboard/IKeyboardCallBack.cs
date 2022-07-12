@@ -27,7 +27,7 @@ namespace FVH.Background.Input
         /// <br>Комбинация клавиш.</br>
         /// </param>
         public Task AddCallBackTask(VKeys[] keyCombo, Func<Task> callbackTask, object? identifier = null);
-        public Task<bool> DeleteATaskByAnIdentifier(object? identifier = null);
+        public Task<bool> DeleteATaskByAnIdentifier(object? identifier = null); //todo удалить null и добавить удаление по группе, возможно метод по полной полной очистке?
         public Task<bool> ContainsKeyComibantion(VKeys[] keyCombo);
         public List<RegFunctionGroupKeyboard> ReturnGroupRegFunctions();
     }
