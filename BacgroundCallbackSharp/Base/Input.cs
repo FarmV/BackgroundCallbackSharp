@@ -56,8 +56,6 @@ namespace FVH.Background.Input
         private IKeyboardCallBack? _callbackFunction;
         private Thread? winThread;
 
-
-
         ///<returns>
         /// <br><see langword="En"/></br>
         /// <br>Reference to the class that implements the <see cref="IKeyboardHandler"/>.</br>

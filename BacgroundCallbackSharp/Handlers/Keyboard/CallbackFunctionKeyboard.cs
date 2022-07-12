@@ -155,7 +155,6 @@ namespace FVH.Background.Input
         {
             lock (_lockMedthod)
             {
-
                 RegFunctionGroupKeyboard? queryCotainGroup = GlobalList.SingleOrDefault(x => x.KeyCombination.SequenceEqual(keyCombo));
                 if (queryCotainGroup is not null) queryCotainGroup.ListOfRegisteredFunctions.Add(new RegFunction(callbackTask, identifier));
                 else

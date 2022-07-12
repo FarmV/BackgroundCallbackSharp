@@ -8,22 +8,24 @@ namespace FVH.Background.Input
 {
     /// <summary>
     /// <br><see langword="En"/></br>
-    ///<br/>This interface declares a contract for the keyboard input registration class. 
-    ///<br><see langword="Ru"/></br>
-    ///<br>Этот интерфейс объявляет контракт для класса регистрации ввода с клавиатуры.</br>
-    ///<code Language ="cs">  
-    ///<a>Example:</a>
-    ///<br>
-    ///<see cref="Input"/> <paramref name="input"/> = <see langword="new"/>();
-    ///</br>
-    ///<br>
-    ///<see cref="IKeyboardCallBack"/> <paramref name="input"/> = <see langword="await"/> <paramref name="input"/>.Subscribe();
-    ///</br>
-    ///</code>    
-    ///</summary>
-
+    /// <br>This interface declares a contract to manage the tasks of the keyboard input class.</br>
+    /// <br><see langword="Ru"/></br>
+    /// <br>Этот интерфейс объявляет контракт для управления задачами класса клавиатурного ввода.</br>
+    /// </summary>
     public interface IKeyboardCallBack
     {
+        /// <summary>
+        /// <br><see langword="En"/></br>
+        /// <br>Adds a new task to the pending queue. If there is a task with an identical key combination, it is added to the group and will subsequently be called in parallel.</br>
+        /// <br><see langword="Ru"/></br>
+        /// <br>Добавляет новую задачу в очередь ожидающих. Если существует задача с идентичной комбинацией клавиш, она добавляется в группу и впоследствии будет вызываться параллельно.</br>
+        /// </summary>
+        /// <param name="keyCombo">
+        /// <br><see langword="En"/></br>
+        /// <br>Key combination.</br>
+        /// <br><see langword="Ru"/></br>
+        /// <br>Комбинация клавиш.</br>
+        /// </param>
         public Task AddCallBackTask(VKeys[] keyCombo, Func<Task> callbackTask, object? identifier = null);
         public Task<bool> DeleteATaskByAnIdentifier(object? identifier = null);
         public Task<bool> ContainsKeyComibantion(VKeys[] keyCombo);

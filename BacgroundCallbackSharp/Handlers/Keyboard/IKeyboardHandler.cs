@@ -30,7 +30,7 @@ namespace FVH.Background.Input
         /// <br><see langword="En"/></br>
         /// <br>When you press a key, it returns the entire collection of keys pressed on the keyboard.</br>
         /// <br><see langword="Ru"/></br>
-        /// <br>При нажатии клавиши возвращается вся коллекция клавиш, нажатых на клавиатуре..</br>
+        /// <br>При нажатии клавиши возвращается вся коллекция клавиш, нажатых на клавиатуре.</br>
         /// </summary>
         public event EventHandler<IKeysNotificator>? KeyPressEvent;
         /// <summary>
