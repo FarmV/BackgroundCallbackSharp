@@ -16,7 +16,7 @@ namespace Run_test
         internal const string Input = "App.Input";
         internal const string Shutdown = "App.Shutdown";
     }
-   
+
     internal class Program
     {
 
@@ -32,8 +32,8 @@ namespace Run_test
 
         static async Task Main(string[] args)
         {
-          
-            AppDomain.CurrentDomain.SetData(ConstApp.Input, Task.Run(() => new Input(mouseHandler: new MyMouseH())));
+
+            AppDomain.CurrentDomain.SetData(ConstApp.Input, new Input(mouseHandler: new MyMouseH()));
 
             Thread helperThread = new Thread(() =>
             {
@@ -49,8 +49,8 @@ namespace Run_test
 
                 Dispatcher.Run();
             });
-
             winThread.SetApartmentState(ApartmentState.STA);
+
             Parallel.Invoke(() => winThread.Start(), () => helperThread.Start());
 
             Dispatcher? winDispatcher = Dispatcher.FromThread(winThread);
@@ -91,16 +91,16 @@ namespace Run_test
 
             Task addCallBackFromHelepr = await helperDispatcher.InvokeAsync(async () =>
             {
-                if (AppDomain.CurrentDomain.GetData(ConstApp.Input) is not Task<Input> input) throw new InvalidOperationException(nameof(input));
+                if (AppDomain.CurrentDomain.GetData(ConstApp.Input) is not Input input) throw new InvalidOperationException(nameof(input));
 
-                await (await (await input).GetKeyboardCallbackFunction()).
-                AddCallBackTask(new VKeys[] { VKeys.VK_SHIFT, VKeys.VK_CONTROL, VKeys.VK_CONTROL }, () => new Task(() =>
-                {
-                    MessageBox.Show("Test");
-                }));
+                await input.GetKeyboardCallbackFunction().
+                       AddCallBackTask(new VKeys[] { VKeys.VK_CONTROL, VKeys.VK_MENU, VKeys.VK_KEY_E }, () => new Task(() =>
+                       {
+                           MessageBox.Show("Test");
+                       }));
             }).Task;
 
-            Task task2 = await winDispatcher.InvokeAsync(async () =>
+            Task task2 = winDispatcher.InvokeAsync(() =>
             {
                 System.Windows.Window window = new System.Windows.Window()
                 {
@@ -119,13 +119,13 @@ namespace Run_test
                     shutdown.Wait();
                 };
                 TextBlock textBlock = (TextBlock)window.Content;
-                if (AppDomain.CurrentDomain.GetData(ConstApp.Input) is not Task<Input> input) throw new InvalidOperationException(nameof(input));
+                if (AppDomain.CurrentDomain.GetData(ConstApp.Input) is not Input input) throw new InvalidOperationException(nameof(input));
 
-                (await (await input).GetMouseHandler()).MouseEvent += async (s, e) => await window.Dispatcher.InvokeAsync(() => textBlock.Text = e.ToString());
+                input.GetMouseHandler().MouseEvent += async (s, e) => await window.Dispatcher.InvokeAsync(() => textBlock.Text = e.ToString());
 
             }).Task;
-
-            Parallel.Invoke(() => addCallBackFromHelepr.Wait(), () => task2.Wait());
+             
+            Task.WaitAll(addCallBackFromHelepr, task2);
 
 
 

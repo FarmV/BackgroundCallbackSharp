@@ -19,15 +19,6 @@ namespace FVH.Background.Input
     ///<br/>The class creates a proxy <see cref="HwndSource"/>. Registers it to receive mouse and keyboard events. Creates classes to handle events.
     ///<br><see langword="Ru"/></br>
     ///<br>Класс создает прокси-источник HwndSource. Регистрирует его для получения событий мыши и клавиатуры. Создает классы для обработки событий.</br>
-    ///<code Language ="cs">  
-    ///<a>Example:</a>
-    ///<br>
-    ///<see langword="using"/> <see cref="Input"/> <paramref name="input"/> = <see langword="new"/>();
-    ///</br>
-    ///<br>
-    ///<see cref="IKeyboardCallBack"/> <paramref name="input"/> = <see langword="await"/> <paramref name="input"/>.Subscribe();
-    ///</br>
-    ///</code>    
     ///</summary>
     public class Input : IDisposable
     {
@@ -65,15 +56,35 @@ namespace FVH.Background.Input
         private IKeyboardCallBack? _callbackFunction;
         private Thread? winThread;
 
-        public Task<IKeyboardHandler> GetKeyboardHandler() => Task.FromResult(_keyboardHandler);
-        public Task<IMouseHandler> GetMouseHandler() => Task.FromResult(_mouseHandler);
-        public Task<IKeyboardCallBack> GetKeyboardCallbackFunction() => Task.FromResult(_callbackFunction is IKeyboardCallBack CallBack ? CallBack : throw new NullReferenceException(nameof(_callbackFunction)));
 
 
-        public Input() : this(null, null) { }
-        public Input(IKeyboardHandler? keyboardHandler = null, IMouseHandler? mouseHandler = null)
+        ///<returns>
+        /// <br><see langword="En"/></br>
+        /// <br>Reference to the class that implements the <see cref="IKeyboardHandler"/>.</br>
+        /// <br><see langword="Ru"/></br>
+        /// <br>Cсылка на класс, реализующий интерфейс <see cref="IKeyboardHandler"/>.</br>
+        ///</returns>
+        public IKeyboardHandler GetKeyboardHandler() => _keyboardHandler;
+        ///<returns>
+        /// <br><see langword="En"/></br>
+        /// <br>Reference to the class that implements the <see cref="IMouseHandler"/>.</br>
+        /// <br><see langword="Ru"/></br>
+        /// <br>Cсылка на класс, реализующий интерфейс <see cref="IMouseHandler"/>.</br>
+        ///</returns>
+        public IMouseHandler GetMouseHandler() => _mouseHandler;
+        ///<returns>
+        /// <br><see langword="En"/></br>
+        /// <br>Reference to the class that implements the <see cref="IKeyboardCallBack"/>.</br>
+        /// <br><see langword="Ru"/></br>
+        /// <br>Cсылка на класс, реализующий интерфейс <see cref="IKeyboardCallBack"/>.</br>
+        ///</returns>
+        public IKeyboardCallBack GetKeyboardCallbackFunction() => _callbackFunction is IKeyboardCallBack CallBack ? CallBack : throw new NullReferenceException(nameof(_callbackFunction));
+
+
+        public Input() : this(null) { }
+        public Input(IMouseHandler? mouseHandler = null)
         {
-            _keyboardHandler = keyboardHandler is IKeyboardHandler handlerKeyboard ? handlerKeyboard : new KeyboardHandler();
+            _keyboardHandler = new KeyboardHandler();
             _mouseHandler = mouseHandler is IMouseHandler handlerMouse ? handlerMouse : new MouseHandler();
 
             _callbackEventKeyboardData = new Action<RawInputKeyboardData>((x) => _keyboardHandler.HandlerKeyboard(x));
@@ -129,12 +140,12 @@ namespace FVH.Background.Input
                 }
             });
 
-            Task subscribeWindowtoRawInput = new Task( () =>
+            Task subscribeWindowtoRawInput = new Task(() =>
             {
                 if (ProxyInputHandlerWindow is null) throw new NullReferenceException("The window could not initialize");
 
-                 ProxyInputHandlerWindow.Dispatcher.Invoke(() => // синхронно?
-                 {
+                ProxyInputHandlerWindow.Dispatcher.Invoke(() => // синхронно?
+                {
                     RawInputDeviceRegistration[] devices =
                     {
                          new RawInputDeviceRegistration(HidUsageAndPage.Mouse, RawInputDeviceFlags.InputSink, ProxyInputHandlerWindow.Handle),
@@ -171,7 +182,7 @@ namespace FVH.Background.Input
                         return hwnd;
                     }
 
-                    _lowLevlHook = new LowLevlHook();
+                    _lowLevlHook = new LowLevlHook(); // он должен быть создан потоком владецем окна?
                     _lowLevlHook.InstallHook();
                     _callbackFunction = new CallbackFunctionKeyboard(_keyboardHandler, _lowLevlHook);
                 }, DispatcherPriority.Render);
@@ -183,7 +194,7 @@ namespace FVH.Background.Input
             isItialized = true;
             return Task.CompletedTask;
         }
-    }   
+    }
 }
 
 
