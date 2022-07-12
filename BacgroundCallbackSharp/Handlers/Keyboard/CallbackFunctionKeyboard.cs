@@ -1,75 +1,32 @@
 ﻿using FVH.Background.Input;
-using FVH.Background.InputHandler;
-
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 
 namespace FVH.Background.Input
 {
-    internal class VKeysEqualityComparer : IEqualityComparer<VKeys[]>
+    internal class CallbackFunctionKeyboard : IKeyboardCallBack , IInvoke
     {
-        public bool Equals(VKeys[]? x, VKeys[]? y)
-        {
-            if (x is null || y is null) return false;
-            if (x.Length is 0 || y.Length is 0) return false;
-            if (x.Length != y.Length) return false;
-            if (x.SequenceEqual(y)) return true;
-            if (x.Intersect(y).Count() == x.Length) return true;
-            return false;
-        }
-        public int GetHashCode([DisallowNull] VKeys[] obj) => 0;
-
-    }
-    public class RegGroupFunction
-    {
-        internal RegGroupFunction(int group, VKeys[] keyCombination, List<RegFunction> listOfRegisteredFunctions)
-        {
-            Group = group;
-            ListOfRegisteredFunctions = listOfRegisteredFunctions;
-            KeyCombination = keyCombination;
-        }
-        public VKeys[] KeyCombination { get; }
-        private int _group;
-        public int Group
-        {
-            get { return _group; }
-            private set { if (value < 0) throw new InvalidOperationException("The value for the group cannot be negative"); _group = value; }
-        }
-        public List<RegFunction> ListOfRegisteredFunctions { get; }
-    }
-    public record RegFunction
-    {
-        internal RegFunction(Func<Task> callBackTask, object? identifier = null)
-        {
-            CallBackTask = callBackTask;
-            Identifier = identifier;
-        }
-        public object? Identifier { get; }
-        public Func<Task> CallBackTask { get; }
-    }
-    internal class CallbackFunction : ICallBack
-    {
-        private readonly List<RegGroupFunction> GlobalList = new List<RegGroupFunction>();
+        private readonly List<RegFunctionGroupKeyboard> GlobalList = new List<RegFunctionGroupKeyboard>();
         private readonly LowLevlHook _lowlevlhook;
-        private readonly IHandler _keyboardHandler;
+        private readonly IKeyboardHandler _keyboardHandler;
         private readonly Dictionary<VKeys[], Func<Task>> FunctionsCallback = new Dictionary<VKeys[], Func<Task>>(new VKeysEqualityComparer());
 
-        public CallbackFunction(IHandler keyboardHandler, LowLevlHook lowLevlHook)
+        public CallbackFunctionKeyboard(IKeyboardHandler keyboardHandler, LowLevlHook lowLevlHook)
         {
             _keyboardHandler = keyboardHandler;
             _lowlevlhook = lowLevlHook;
             _keyboardHandler.KeyPressEvent += KeyboardHandler_KeyPressEvent;
         }
-        private async void KeyboardHandler_KeyPressEvent(object? sender, DataKeysNotificator e)
+        private async void KeyboardHandler_KeyPressEvent(object? sender, IKeysNotificator e)
         {
             VKeys[] pressedKeys = e.Keys;
             async Task<bool> InvokeOneKey(VKeys key)
             {
-                RegGroupFunction? qR = GlobalList.SingleOrDefault(x => x.KeyCombination.Length == 1 & x.KeyCombination[0] == key);
+                RegFunctionGroupKeyboard? qR = GlobalList.SingleOrDefault(x => x.KeyCombination.Length == 1 & x.KeyCombination[0] == key);
                 if (qR is null) return false;
                 else
                 {
-                    await InvokFunctions(qR.ListOfRegisteredFunctions);
+                    await InvokeFunctions(qR.ListOfRegisteredFunctions);
                     return true;
                 }
             }
@@ -85,15 +42,15 @@ namespace FVH.Background.Input
                 b.ToList().ForEach(x => difColection.Remove(x));
                 return difColection;
             }
-            IEnumerable<RegGroupFunction> queryPrewievNotDuplicate = GlobalList.Where(x => x.KeyCombination.Length == pressedKeys.Length + 1).Where(x => x.KeyCombination.Except(pressedKeys).Count() == 1);
-            IEnumerable<RegGroupFunction> queryPrewievDuplicate = GlobalList.Where(x => x.KeyCombination.Length == pressedKeys.Length + 1);           
+            IEnumerable<RegFunctionGroupKeyboard> queryPrewievNotDuplicate = GlobalList.Where(x => x.KeyCombination.Length == pressedKeys.Length + 1).Where(x => x.KeyCombination.Except(pressedKeys).Count() == 1);
+            IEnumerable<RegFunctionGroupKeyboard> queryPrewievDuplicate = GlobalList.Where(x => x.KeyCombination.Length == pressedKeys.Length + 1);           
             List<VKeys> myPreKeys = new List<VKeys>();
             if (queryPrewievNotDuplicate.Any() is false)
             {
                 if (queryPrewievDuplicate.Any() is false) return;
                 else
                 {
-                    foreach (RegGroupFunction x in queryPrewievDuplicate)
+                    foreach (RegFunctionGroupKeyboard x in queryPrewievDuplicate)
                     {
                         IEnumerable<VKeys> resultDifference = GetDifference(x.KeyCombination, pressedKeys);
                         if (resultDifference.Count() == 1) myPreKeys.Add(resultDifference.ToArray()[0]);
@@ -109,41 +66,31 @@ namespace FVH.Background.Input
                 if (preKeyInput.HasValue is false) return;
                 else
                 {
-                    RegGroupFunction invokeQuery = queryPrewievNotDuplicate.Single(x => x.KeyCombination.Intersect(new VKeys[] { preKeyInput.Value }).Count() == 1);
-                    await InvokFunctions(invokeQuery.ListOfRegisteredFunctions);
+                    RegFunctionGroupKeyboard invokeQuery = queryPrewievNotDuplicate.Single(x => x.KeyCombination.Intersect(new VKeys[] { preKeyInput.Value }).Count() == 1);
+                    await InvokeFunctions(invokeQuery.ListOfRegisteredFunctions);
                 }
             }
-            if (myPreKeys.Count == 0) return;
+            if (myPreKeys.Count is 0) return;
             {
                 VKeys? preKeyInput2 = await PreKeys(myPreKeys);
 
                 if (preKeyInput2.HasValue is false) return;
                 else
                 {
-                    RegGroupFunction invokeQuery = queryPrewievDuplicate.Single(x => x.KeyCombination.Intersect(new VKeys[] { preKeyInput2.Value }).Count() == 1);
-                    await InvokFunctions(invokeQuery.ListOfRegisteredFunctions);
+                    RegFunctionGroupKeyboard invokeQuery = queryPrewievDuplicate.Single(x => x.KeyCombination.Intersect(new VKeys[] { preKeyInput2.Value }).Count() == 1);
+                    await InvokeFunctions(invokeQuery.ListOfRegisteredFunctions);
                 }
             }
         }
 
-        private Task InvokFunctions(IEnumerable<RegFunction> toTaskInvoke)
+        public Task InvokeFunctions(IEnumerable<IRegFunction> toTaskInvoke) //todo порверить и возможно перерабоать логику обработки исключений
         {
             if (toTaskInvoke.Any() is false) throw new InvalidOperationException("The collection cannot be empty");
 
             Parallel.Invoke(toTaskInvoke.Select(x => new Action(() =>
             {
-                try
-                {
-                    x.CallBackTask.Invoke().Start();
-                }
-                catch (InvalidOperationException)
-                {
-                    throw;
-                }
-                catch (Exception)
-                {
-
-                }
+                try { x.CallBackTask.Invoke().Start(); }
+                catch (Exception) { }
             })).ToArray());
 
             return Task.CompletedTask;
@@ -161,15 +108,15 @@ namespace FVH.Background.Input
             {
                 if (_lowlevlhook is null) throw new NullReferenceException(nameof(LowLevlHook));
                 VKeys? chekKey = null;
-                if (key == VKeys.VK_LCONTROL || key == VKeys.VK_RCONTROL) // Заглушки из за разности между RawInput(не рапознает правый левый) и хуком, так как прдположительно нужно менять исходную библиотеку.
+                if (key is VKeys.VK_LCONTROL || key is VKeys.VK_RCONTROL) // Заглушки из за разности между RawInput(не рапознает правый левый) и хуком, так как прдположительно нужно менять исходную библиотеку.
                 {
                     chekKey = VKeys.VK_CONTROL;
                 }
-                else if (key == VKeys.VK_LMENU || key == VKeys.VK_RMENU)
+                else if (key is VKeys.VK_LMENU || key is VKeys.VK_RMENU)
                 {
                     chekKey = VKeys.VK_MENU;
                 }
-                else if (key == VKeys.VK_LSHIFT || key == VKeys.VK_RSHIFT)
+                else if (key is VKeys.VK_LSHIFT || key is VKeys.VK_RSHIFT)
                 {
                     chekKey = VKeys.VK_SHIFT;
                 }
@@ -208,12 +155,11 @@ namespace FVH.Background.Input
         {
             lock (_lockMedthod)
             {
-
-                RegGroupFunction? queryCotainGroup = GlobalList.SingleOrDefault(x => x.KeyCombination.SequenceEqual(keyCombo));
+                RegFunctionGroupKeyboard? queryCotainGroup = GlobalList.SingleOrDefault(x => x.KeyCombination.SequenceEqual(keyCombo));
                 if (queryCotainGroup is not null) queryCotainGroup.ListOfRegisteredFunctions.Add(new RegFunction(callbackTask, identifier));
                 else
                 {
-                    RegGroupFunction newGroupF = new RegGroupFunction(++GoupCount, keyCombo, new List<RegFunction>());
+                    RegFunctionGroupKeyboard newGroupF = new RegFunctionGroupKeyboard(++GoupCount, keyCombo, new List<IRegFunction>());
                     newGroupF.ListOfRegisteredFunctions.Add(new RegFunction(callbackTask, identifier));
                     GlobalList.Add(newGroupF);
                 }
@@ -226,8 +172,8 @@ namespace FVH.Background.Input
             lock (_lockMedthod)
             {
                 if (identifier is null) return Task.FromResult(false);
-                RegFunction? queryF = null;
-                RegGroupFunction? queryResult = GlobalList.SingleOrDefault(x =>
+                IRegFunction? queryF = null;
+                RegFunctionGroupKeyboard? queryResult = GlobalList.SingleOrDefault(x =>
                 {
                     queryF = x.ListOfRegisteredFunctions.Single(fun => fun.Identifier == identifier);
                     return queryF is not null;
@@ -246,18 +192,16 @@ namespace FVH.Background.Input
             lock (_lockMedthod)
             {
                 if (keyCombo.Length is 0) return Task.FromResult(false);
-                RegGroupFunction? queyResult = GlobalList.SingleOrDefault(x => x.KeyCombination == keyCombo);
+                RegFunctionGroupKeyboard? queyResult = GlobalList.SingleOrDefault(x => x.KeyCombination == keyCombo);
                 if (queyResult is null) return Task.FromResult(false);
                 if (GlobalList.Remove(queyResult) is not true) throw new InvalidOperationException();
                 return Task.FromResult(true);
             }
         }
 
-        public List<RegGroupFunction> ReturnGroupRegFunctions() => GlobalList.ToList();
+        public List<RegFunctionGroupKeyboard> ReturnGroupRegFunctions() => GlobalList.ToList();
 
-        public Task<bool> ContainsKeyComibantion(VKeys[] keyCombo) => Task.FromResult(GlobalList.SingleOrDefault(x => x.KeyCombination == keyCombo) is not null);
-
-
+        public Task<bool> ContainsKeyComibantion(VKeys[] keyCombo) => Task.FromResult(GlobalList.SingleOrDefault(x => x.KeyCombination == keyCombo) is not null);    
     }
 
 }

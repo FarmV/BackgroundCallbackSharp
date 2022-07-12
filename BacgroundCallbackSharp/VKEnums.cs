@@ -1,16 +1,40 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
+using System.Security.Policy;
 using System.Text;
 using System.Threading.Tasks;
 
+using static System.Net.WebRequestMethods;
+
 namespace FVH.Background.Input
 {
-    public enum VKeys
+    internal class VKeysEqualityComparer : IEqualityComparer<VKeys[]>
     {
-        //https://docs.microsoft.com/en-us/windows/win32/inputdev/virtual-key-codes
+        public bool Equals(VKeys[]? x, VKeys[]? y)
+        {
+            if (x is null || y is null) return false;
+            if (x.Length is 0 || y.Length is 0) return false;
+            if (x.Length != y.Length) return false;
+            if (x.SequenceEqual(y)) return true;
+            if (x.Intersect(y).Count() == x.Length) return true;
+            return false;
+        }
+        public int GetHashCode([DisallowNull] VKeys[] obj) => 0;
+    }
 
-        // Constant                Value               Description
+
+    /// <summary>
+    ///     <br/>Virtual key codes <see cref="VKeys"/>
+    ///     <br/>
+    ///     <br/>
+    ///     <see href="https://docs.microsoft.com/en-us/windows/win32/inputdev/virtual-key-codes">docs.microsoft.com</see>  
+    /// </summary>
+    public enum VKeys
+    {      
+        // Constant = Value        Description
+
         VK_LBUTTON = 0x01,         /* Left mouse button*/
         VK_RBUTTON = 0x02,         /* Right mouse button*/
         VK_CANCEL = 0x03,          /* Control-break processing*/
