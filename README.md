@@ -3,15 +3,12 @@
 ## Example
 
 ```Csharp
-using FVH.Background.InputHandler;
 using FVH.Background.Input;
 
 ***
-using Input input = new Input();
-ICallBack iCallBack = await input.Subscribe();
-
- await iCallBack.AddCallBackTask(new VKeys[] { VKeys.VK_SHIFT, VKeys.VK_CONTROL, VKeys.VK_CONTROL }, 
-        () => new Task(() => System.Windows.MessageBox.Show("Ok") ));
+Input input = new Input();
+IKeyboardCallBack keyboardCallBack = input.GetKeyboardCallbackFunction();
+await keyboardCallBack.AddCallBackTask(new VKeys[] { VKeys.VK_SHIFT, VKeys.VK_HOME, VKeys.VK_KEY_E, VKeys.VK_KEY_E }, () => new Task(() => { MessageBox.Show("OK"); }) );
 ***
 
 // NotUse  VKeys.VK_LCONTROL, VKeys.VK_RCONTROL,VKeys.VK_LMENU,VKeys.VK_RMENU,VKeys.VK_LSHIFT,VKeys.VK_RSHIFT
